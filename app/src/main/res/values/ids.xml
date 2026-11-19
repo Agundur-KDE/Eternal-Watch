@@ -1,0 +1,14 @@
+<resources>
+    <item name="feed_status" type="id" />
+    <item name="watch_face" type="id" />
+    <item name="refresh_feed" type="id" />
+    <item name="special_day" type="id" />
+    <item name="invasion_report" type="id" />
+    <item name="monitor_toggle" type="id" />
+    <item name="search_days" type="id" />
+    <item name="add_widget" type="id" />
+    <item name="tab_overview" type="id" />
+    <item name="tab_settings" type="id" />
+    <item name="select_all_days" type="id" />
+    <item name="clear_selected_days" type="id" />
+</resources>

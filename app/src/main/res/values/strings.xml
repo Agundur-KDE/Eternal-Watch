@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Eternal Watch</string>
+    <string name="subtitle">Your Eternal Lands companion</string>
+    <string name="overview">Overview</string>
+    <string name="alerts">Alerts &amp; settings</string>
+    <string name="refresh">Refresh</string>
+    <string name="clock_label">ETERNAL LANDS TIME</string>
+    <string name="game_date">Day %1$d · Month %2$d · Year %3$d</string>
+    <string name="loading">Fetching game data…</string>
+    <string name="live">Synced with Mercator</string>
+    <string name="outdated">Outdated data · waiting for a fresh sample</string>
+    <string name="network_error">Connection unavailable · last data retained</string>
+    <string name="invalid_data">The source returned invalid data</string>
+    <string name="waiting">Waiting for game data</string>
+    <string name="last_sample">Source sample: %1$s</string>
+    <string name="special_heading">TODAY IN ETERNAL LANDS</string>
+    <string name="last_report">LATEST INVASION REPORT</string>
+    <string name="recent_report">RECENT INVASION WARNING</string>
+    <string name="no_report">No invasion report available</string>
+    <string name="just_now">Just now</string>
+    <string name="report_minutes">%1$d min ago</string>
+    <string name="report_hours">%1$d h ago</string>
+    <string name="report_date">Reported on %1$s</string>
+    <string name="future_report">Report timestamp is in the future</string>
+    <string name="report_note">Reports are historical messages. A recent warning does not confirm that an invasion is still running.</string>
+    <string name="monitor_heading">Stay informed</string>
+    <string name="monitor_enabled">Monitor in the background</string>
+    <string name="monitor_help">Background monitoring keeps an ongoing notification and checks the public feed at your chosen interval. Android battery saving can delay checks. Without it, data refreshes while the app is open and periodically in the widget.</string>
+    <string name="invasion_enabled">Notify about new invasion warnings</string>
+    <string name="invasion_sound">Sound for invasion warnings</string>
+    <string name="show_seconds">Show seconds in the app</string>
+    <string name="poll_interval">Refresh interval</string>
+    <string name="interval_seconds">%1$d s</string>
+    <string name="selected_days">Special Day notifications</string>
+    <string name="day_help">Select the days you care about. Starting monitoring establishes a silent baseline; alerts begin with the next change. Game names and source text stay in English.</string>
+    <string name="search_days">Find a Special Day…</string>
+    <string name="select_all">Select all</string>
+    <string name="clear_days">Clear selection</string>
+    <plurals name="selection_count"><item quantity="one">%1$d day selected</item><item quantity="other">%1$d days selected</item></plurals>
+    <string name="notification_required">Allow notifications to enable background alerts</string>
+    <string name="notifications_blocked">Notifications are blocked. Enable them in Android settings.</string>
+    <string name="open_notification_settings">Android notification settings</string>
+    <string name="channel_monitor">Background monitoring</string>
+    <string name="channel_days">Special Days</string>
+    <string name="channel_invasion">Invasion warnings · silent</string>
+    <string name="channel_invasion_sound">Invasion warnings · with sound</string>
+    <string name="monitor_active">Eternal Watch is monitoring</string>
+    <string name="monitor_status">Public game data · refresh every %1$d s</string>
+    <string name="stop">Stop monitoring</string>
+    <string name="special_notification">New Special Day</string>
+    <string name="invasion_notification">New invasion report</string>
+    <string name="add_widget">Add home-screen widget</string>
+    <string name="widget_help">The widget shows a timestamped sample, not a ticking clock. Tap Refresh for new data. Background monitoring updates it more often; Android otherwise schedules occasional updates.</string>
+    <string name="widget_sample">Feed sample · %1$s</string>
+    <string name="widget_pin_unavailable">Add Eternal Watch from your launcher widget picker</string>
+    <string name="widget_description">Eternal Lands time and Special Day from Mercator</string>
+    <string name="source_link">Data source: Mercator</string>
+    <string name="about">About &amp; licenses</string>
+    <string name="about_text">An unofficial Eternal Lands companion by Agundur. Public data from Mercator. No account, personal token, advertising or tracking. Clock and alarm rules adapted from EL-Klock, GPL-3.0-only. Game data belongs to its respective authors. Version %1$s.</string>
+    <string name="view_license">View source license</string>
+    <string name="close">Close</string>
+    <string name="restart_help">If enabled, monitoring resumes after a restart once the phone is unlocked. Stopping it disables automatic restart.</string>
+    <string name="clock_accessibility">Eternal Lands time: %1$s</string>
+</resources>
