@@ -73,3 +73,23 @@ is checked before mutations. Three local regression checks pass for old choices,
 missing defaults, latest-cache preservation and non-mutated input trees.
 This restoration path has not yet been exercised against the returned phone.
 Actual settings/monitor UI checks remain unconfirmed until USB approval.
+
+
+## Authorized Moto: partial settings checks and keyboard correction
+
+USB authorization resumed after restarting the local ADB server; user confirmed
+the new prompt. Actual UI runs confirmed monitor start and stop with a foreground
+service and persisted choice. Select-all and clear passed after the test tool
+waited for asynchronous UI/SharedPreferences.apply() writes. The restoration
+finally path ran on device and restored the original choices while retaining
+the latest cache, even after a failed selection check.
+
+The individual filtered-day tap remained unconfirmed with the keyboard open.
+The app now includes IME bottom insets and a search-key action that dismisses
+the keyboard; the tool submits that action before selecting the day. A subsequent
+attempt was blocked by automatic screen lock. Confirmed via window policy:
+keyguard showing, SCREEN_STATE_OFF. A debug-only qa_keep_awake launch option
+now keeps only the visible test activity awake; no global screen setting changes.
+Updated APK installed; build, 14 core tests, translations and lint0errors pass.
+A final complete settings run still requires the user to unlock the phone.
+No claim that the individual selection correction passed on device yet.

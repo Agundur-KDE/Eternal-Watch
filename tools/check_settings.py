@@ -57,6 +57,14 @@ def main():
     def service():
         s=run('shell','dumpsys','activity','services',PACKAGE).decode()
         return '.WatchService' in s and 'isForeground=true' in s
+    def expect_selection(expected):
+        # UI events and SharedPreferences.apply() reach the on-disk XML asynchronously.
+        latest=set()
+        for _ in range(20):
+            latest=prefs().get('selected_days',set())
+            if (len(latest)==expected if isinstance(expected,int) else latest==expected):return
+            time.sleep(.2)
+        raise RuntimeError('Day selection mismatch: '+str(len(latest))+' saved, expected '+str(expected if isinstance(expected,int) else len(expected)))
     root=Path(__file__).resolve().parents[1]
     apk=root/'dist/Eternal-Watch-debug.apk'
     metadata=root/'app/build/outputs/apk/debug/output-metadata.json'
@@ -71,7 +79,7 @@ def main():
     changed=False
     def exercise():
         nonlocal changed
-        run('shell','am','start','-W','-n',PACKAGE+'/.MainActivity');tap('tab_settings')
+        run('shell','am','start','-W','-n',PACKAGE+'/.MainActivity','--ez','qa_keep_awake','true');tap('tab_settings')
         if prefs().get('monitor_enabled','false')=='true':
             changed=True
             tap('monitor_toggle')
@@ -96,14 +104,15 @@ def main():
         if service() or prefs().get('monitor_enabled')!='false':raise RuntimeError('Monitoring did not stop')
         print('Real monitor switch stops the service and clears saved restart choice.',flush=True)
         tap('select_all_days',True)
-        if len(prefs().get('selected_days',set()))!=49:raise RuntimeError('Select-all did not save all 49 days')
+        expect_selection(49)
         tap('clear_selected_days')
-        if prefs().get('selected_days',set()):raise RuntimeError('Clear selection did not persist')
+        expect_selection(set())
         tap('search_days');run('shell','input','text','Reconstruction')
+        run('shell','input','keyevent','66')  # Submit the real search action and dismiss IME.
         doc=tree();node=next((n for n in doc.iter('node') if n.get('class')=='android.widget.CheckBox' and n.get('text')=='Reconstruction Day'),None)
         if node is None:raise RuntimeError('Day search did not find Reconstruction Day')
         tap_node(node)
-        if prefs().get('selected_days')!={'Reconstruction Day'}:raise RuntimeError('Single-day selection did not persist')
+        expect_selection({'Reconstruction Day'})
         print('Select-all, clear, search and individual-day selection passed.',flush=True)
     try:
         exercise()

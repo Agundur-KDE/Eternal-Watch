@@ -13,6 +13,8 @@ import android.os.*;
 import android.provider.Settings;
 import android.text.*;
 import android.view.*;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.text.DateFormat;
 import java.util.*;
@@ -43,11 +45,17 @@ public final class MainActivity extends Activity {
     private int dp(float value) { return (int)(getResources().getDisplayMetrics().density*value+.5f); }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);WatchNotifications.channels(this);
+        if((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)!=0
+                && getIntent().getBooleanExtra("qa_keep_awake",false))
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(BG);
         LinearLayout root=column();root.setPadding(dp(20),dp(22),dp(20),dp(28));scroll.addView(root);
         scroll.setOnApplyWindowInsetsListener((view,insets)->{
             if(Build.VERSION.SDK_INT>=30) {
-                Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());view.setPadding(bars.left,bars.top,bars.right,bars.bottom);
+                Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());
+                Insets keyboard=insets.getInsets(WindowInsets.Type.ime());
+                view.setPadding(bars.left,bars.top,bars.right,Math.max(bars.bottom,keyboard.bottom));
             } else view.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
             return insets;
         });
@@ -110,6 +118,14 @@ public final class MainActivity extends Activity {
         }
         LinearLayout days=card(settings);text(days,getString(R.string.selected_days),22,INK);text(days,getString(R.string.day_help),13,MUTED);
         EditText search=new EditText(this);search.setSingleLine();search.setHint(R.string.search_days);search.setTextColor(INK);search.setHintTextColor(MUTED);search.setId(R.id.search_days);days.addView(search);
+        search.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
+        search.setOnEditorActionListener((v,action,event)->{
+            if(action==EditorInfo.IME_ACTION_SEARCH || (event!=null && event.getKeyCode()==KeyEvent.KEYCODE_ENTER)) {
+                getSystemService(InputMethodManager.class).hideSoftInputFromWindow(search.getWindowToken(),0);
+                return true;
+            }
+            return false;
+        });
         LinearLayout controls=row(days);button(controls,R.string.select_all,()->setAll(true)).setId(R.id.select_all_days);button(controls,R.string.clear_days,()->setAll(false)).setId(R.id.clear_selected_days);selectionCount=text(days,"",12,GOLD);
         Set<String> selectedDays=prefs().getStringSet("selected_days",Collections.emptySet());
         for(String name:SpecialDays.NAMES) {
