@@ -103,6 +103,11 @@ public final class MainActivity extends Activity {
             @Override public void onNothingSelected(AdapterView<?> p) { }
         });
         button(live,R.string.open_notification_settings,()->startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,getPackageName())));
+        if(Build.VERSION.SDK_INT>=33) {
+            Intent languageSettings=new Intent(Settings.ACTION_APP_LOCALE_SETTINGS,Uri.parse("package:"+getPackageName()));
+            if(languageSettings.resolveActivity(getPackageManager())!=null)
+                button(live,R.string.app_language,()->startActivity(languageSettings));
+        }
         LinearLayout days=card(settings);text(days,getString(R.string.selected_days),22,INK);text(days,getString(R.string.day_help),13,MUTED);
         EditText search=new EditText(this);search.setSingleLine();search.setHint(R.string.search_days);search.setTextColor(INK);search.setHintTextColor(MUTED);search.setId(R.id.search_days);days.addView(search);
         LinearLayout controls=row(days);button(controls,R.string.select_all,()->setAll(true)).setId(R.id.select_all_days);button(controls,R.string.clear_days,()->setAll(false)).setId(R.id.clear_selected_days);selectionCount=text(days,"",12,GOLD);
@@ -152,7 +157,7 @@ public final class MainActivity extends Activity {
         status.setText(getString("loading".equals(error)?R.string.loading:"network".equals(error)?R.string.network_error:"invalid".equals(error)?R.string.invalid_data:valid?R.string.live:data==null?R.string.waiting:R.string.outdated));
         status.setTextColor(valid?0xff9cccae:GOLD);
         if(data!=null) {
-            date.setText(getString(R.string.game_date,data.day,data.month,data.year));sample.setText(getString(R.string.last_sample,DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(data.clockStamp))));
+            date.setText(getString(R.string.game_date,data.day,data.month,data.year));sample.setText(getString(R.string.last_sample,DateFormat.getTimeInstance(DateFormat.SHORT,getResources().getConfiguration().getLocales().get(0)).format(new Date(data.clockStamp))));
             dayName.setText(data.name);boolean redundant=SpecialDays.key(data.name).equals(SpecialDays.key(data.description));
             dayDescription.setText(data.description);dayDescription.setVisibility(redundant||data.description.isEmpty()?View.GONE:View.VISIBLE);
             rolePlay.setText(data.rolePlay);rolePlay.setVisibility(data.rolePlay.isEmpty()?View.GONE:View.VISIBLE);
@@ -166,7 +171,7 @@ public final class MainActivity extends Activity {
         long seconds=(now-stamp)/1000;
         if(seconds< -60)return getString(R.string.future_report);if(seconds<60)return getString(R.string.just_now);
         if(seconds<3600)return getString(R.string.report_minutes,seconds/60);if(seconds<86400)return getString(R.string.report_hours,seconds/3600);
-        return getString(R.string.report_date,DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT).format(new Date(stamp)));
+        return getString(R.string.report_date,DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT,getResources().getConfiguration().getLocales().get(0)).format(new Date(stamp)));
     }
     private void pinWidget() {
         AppWidgetManager manager=getSystemService(AppWidgetManager.class);

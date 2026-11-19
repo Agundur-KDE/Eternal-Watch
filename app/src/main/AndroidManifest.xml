@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <application android:label="@string/app_name" android:icon="@drawable/ic_watch" android:theme="@style/AppTheme" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/backup_rules" android:usesCleartextTraffic="false" android:supportsRtl="true">
+    <application android:name=".WatchApplication" android:localeConfig="@xml/locales_config" android:label="@string/app_name" android:icon="@drawable/ic_watch" android:theme="@style/AppTheme" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/backup_rules" android:usesCleartextTraffic="false" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
@@ -17,6 +17,9 @@
         <receiver android:name=".WatchWidget" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/watch_widget" />
+        </receiver>
+        <receiver android:name=".LanguageReceiver" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.LOCALE_CHANGED" /><action android:name="android.intent.action.APPLICATION_LOCALE_CHANGED" /></intent-filter>
         </receiver>
     </application>
 </manifest>

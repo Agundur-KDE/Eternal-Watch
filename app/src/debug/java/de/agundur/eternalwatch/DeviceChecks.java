@@ -37,7 +37,35 @@ public final class DeviceChecks extends Instrumentation {
                 } catch(Throwable error) { failure.set(error); }
             });
             if(failure.get()!=null) throw new AssertionError("Widget rendering failed",failure.get());
-            result.putString("stream","Live sample, German quantity resources and production RemoteViews rendering/actions passed. No launcher layout modified.\n");
+            String[][] cases={
+                {"en","Refresh","Eternal Watch is monitoring"},
+                {"de","Aktualisieren","Eternal Watch überwacht"},
+                {"es","Actualizar","Eternal Watch está supervisando"},
+                {"ru","Обновить","Eternal Watch отслеживает события"}
+            };
+            try {
+                for(String[] row:cases) {
+                    Configuration configuration=new Configuration(c.getResources().getConfiguration());configuration.setLocale(Locale.forLanguageTag(row[0]));
+                    Context language=c.createConfigurationContext(configuration);
+                    require(language.getString(R.string.refresh).equals(row[1]),row[0]+" refresh translation");
+                    require(WatchNotifications.ongoing(language).extras.getCharSequence(android.app.Notification.EXTRA_TITLE).toString().equals(row[2]),row[0]+" notification translation");
+                    AtomicReference<Throwable> widgetFailure=new AtomicReference<>();
+                    runOnMainSync(()->{
+                        try {
+                            View widget=WatchWidget.views(language).apply(language,new FrameLayout(language));
+                            require(((TextView)widget.findViewById(R.id.widget_refresh)).getText().toString().equals(row[1]),row[0]+" widget translation");
+                        } catch(Throwable error) { widgetFailure.set(error); }
+                    });
+                    if(widgetFailure.get()!=null)throw new AssertionError(row[0]+" localized widget",widgetFailure.get());
+                }
+                Configuration configuration=new Configuration(c.getResources().getConfiguration());configuration.setLocale(Locale.forLanguageTag("ru"));
+                Context russian=c.createConfigurationContext(configuration);
+                require(russian.getResources().getQuantityString(R.plurals.selection_count,1,1).equals("Выбран 1 день"),"Russian one");
+                require(russian.getResources().getQuantityString(R.plurals.selection_count,2,2).equals("Выбрано 2 дня"),"Russian few");
+                require(russian.getResources().getQuantityString(R.plurals.selection_count,5,5).equals("Выбрано 5 дней"),"Russian many");
+                require(russian.getResources().getQuantityString(R.plurals.selection_count,21,21).equals("Выбран 21 день"),"Russian 21");
+            } finally { WatchNotifications.channels(c); }
+            result.putString("stream","Live sample, DE/EN/ES/RU translations, localized notifications, widget rendering/actions and Russian quantity forms passed. No launcher layout or device locale modified.\n");
             finish(Activity.RESULT_OK,result);
         } catch(Throwable error) {
             result.putString("stream","Device checks failed: "+error.getClass().getSimpleName()+" "+error.getMessage()+"\n");

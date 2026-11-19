@@ -38,3 +38,21 @@ Mercator remains accurate. No guide content copied and no WebView added.
 Build, all 14 core tests, lint0errors and complete EN/DE resource keys pass.
 The earlier settings automation did not complete because the app became
 not visible/phone locked; do not upgrade that result to passed.
+
+
+## Required four languages – 19 November 2026
+
+User explicitly requires DE, EN, ES and RU (website visitor countries shown as
+context). This preference is now in AGENTS.md. All 71 translatable resources have
+complete key/type/placeholder coverage; Android app-language registration and
+quantity forms are checked automatically before builds. English stays fallback;
+original English game names and live feed text are preserved.
+
+Updated APK installed on the Moto. Build + 14 core JVM tests and lint0errors pass.
+Extended debug instrumentation passes on the actual phone: English, German,
+Spanish and Russian refresh labels, localized foreground notification titles,
+actual RemoteViews widget labels/rendering, plus Russian one/few/many cases at
+1,2,5,21. It restores channel names to the current app language; no global device
+locale or launcher layout was modified. Static EN/DE/ES/RU argument and quantity
+validation passed. These checks do not claim every screen/font-size combination
+or an actual event transition was manually tested in each language.

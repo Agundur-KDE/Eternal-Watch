@@ -14,3 +14,7 @@ Parent instructions in `/home/alec/projects/AGENTS.md` apply.
 - Keep notification choices per Special Day; preserve original English game names.
 - Keep credentials, signing keys, private device data and build artifacts out of Git.
 - Store visible app text in Android resources; avoid hardcoded UI strings.
+- Required app languages: German (de), English (en, complete fallback), Spanish
+  (es), Russian (ru). Keep all translations complete, including notifications,
+  widgets and quantity forms. The original English game names/source text remain
+  unchanged. Use language-neutral settings and stable resource IDs in tools.

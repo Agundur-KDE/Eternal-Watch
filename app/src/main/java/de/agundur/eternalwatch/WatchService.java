@@ -2,6 +2,7 @@
 package de.agundur.eternalwatch;
 import android.app.*;
 import android.content.*;
+import android.content.res.Configuration;
 import android.os.IBinder;
 import java.util.concurrent.*;
 
@@ -21,5 +22,10 @@ public final class WatchService extends Service {
         return START_STICKY;
     }
     @Override public void onDestroy() { scheduler.shutdownNow();super.onDestroy(); }
+    @Override public void onConfigurationChanged(Configuration configuration) {
+        super.onConfigurationChanged(configuration);
+        if(FeedRepository.prefs(this).getBoolean("monitor_enabled",false) && WatchNotifications.permitted(this))
+            getSystemService(NotificationManager.class).notify(1,WatchNotifications.ongoing(this));
+    }
     @Override public IBinder onBind(Intent intent) { return null; }
 }

@@ -30,7 +30,7 @@ public final class WatchWidget extends AppWidgetProvider {
         if(data!=null) {
             // This is explicitly a timestamped sample, never a pretend ticking EL clock.
             clock=data.clock(data.clockStamp,false);day=data.name;
-            stamp=c.getString(R.string.widget_sample,DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT).format(new Date(data.clockStamp)));
+            stamp=c.getString(R.string.widget_sample,DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT,c.getResources().getConfiguration().getLocales().get(0)).format(new Date(data.clockStamp)));
         }
         views.setTextViewText(R.id.widget_time,clock);views.setTextViewText(R.id.widget_day,day);views.setTextViewText(R.id.widget_stamp,stamp);
         views.setOnClickPendingIntent(R.id.widget_root,WatchNotifications.open(c));

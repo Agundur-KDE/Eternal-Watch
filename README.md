@@ -13,7 +13,7 @@ alarm rules from [EL-Klock](https://github.com/Agundur-KDE/EL-Klock).
 - Home-screen widget with a timestamped clock/day sample and manual refresh.
 - Direct browser links to our [Eternal Lands website](https://eternal-lands.agundur.de/):
   quests, dailies, Haidir, Daritha and Xaquelina. No embedded WebView or copied guide database.
-- English and German interface; game names and source text remain in English.
+- German, English, Spanish and Russian interface; game names and source text remain in English.
 - No account, personal token, tracking SDK, advertising or cloud backend.
 
 ## Build
@@ -89,7 +89,8 @@ adb -s <USB-SERIAL> shell am instrument -w de.agundur.eternalwatch/.DeviceChecks
 The first tool checks real network data and visible UI, keeping screenshots only
 in ignored test-results. DeviceChecks exists only in debug builds and renders the
 actual production widget RemoteViews off-screen, without changing launcher layout.
-It also checks cached data and German singular/plural resources. Results actually
+It also checks cached data, all four localized notification/widget variants,
+and German/Russian quantity resources. Results actually
 observed on the test device are recorded in docs/verification.md.
 
 ## License and provenance
@@ -97,3 +98,21 @@ observed on the test device are recorded in docs/verification.md.
 GPL-3.0-only; see LICENSE and NOTICE.md. The repository is private; no source or
 APK publication has been made. This is an unofficial Eternal Lands companion.
 No EL-Klock KDE template source or unverified third-party audio was copied.
+
+
+## Languages
+
+German (de), English (en, full fallback), Spanish (es) and Russian (ru) are
+required project languages. All 71 translatable resources are complete, including
+widget text, channels, notifications, status/errors and website links. Russian
+quantity forms include one/few/many/other; Spanish includes one/many/other.
+`tools/check_translations.py` runs before every APK build to reject missing keys,
+wrong format placeholders, incomplete quantity forms or missing locale registration.
+
+Android 13+ lists these languages as app languages; settings include a shortcut
+where the system supports the app-language settings screen. On older versions,
+resources follow the device language with English fallback. Widget/channel text
+is refreshed when configuration or app-language changes, and the running service
+refreshes its notification. Date/time formatting uses the app language explicitly.
+Game names and live Mercator descriptions/reports remain original English text;
+the linked Agundur website opens in the browser and has its own language/content.
