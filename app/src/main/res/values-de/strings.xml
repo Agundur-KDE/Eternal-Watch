@@ -61,4 +61,13 @@
     <string name="close">Schließen</string>
     <string name="restart_help">Aktive Überwachung startet nach einem Neustart wieder, sobald das Handy entsperrt wurde. Stoppen deaktiviert auch den automatischen Start.</string>
     <string name="clock_accessibility">Eternal-Lands-Zeit: %1$s</string>
+    <string name="agundur_heading">AGUNDUR · ETERNAL LANDS</string>
+    <string name="guides_title">Dein nächstes Abenteuer</string>
+    <string name="guides_description">Quests, tägliche Aufgaben und Werkzeuge auf unserer Eternal-Lands-Seite. Die Links öffnen sich im Browser.</string>
+    <string name="quests_link">Quests</string>
+    <string name="dailies_link">Dailies</string>
+    <string name="haidir_link">Haidir</string>
+    <string name="daritha_link">Daritha</string>
+    <string name="xaquelina_link">Xaquelina</string>
+    <string name="agundur_website">eternal-lands.agundur.de</string>
 </resources>

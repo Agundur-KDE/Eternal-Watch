@@ -11,4 +11,7 @@
     <item name="tab_settings" type="id" />
     <item name="select_all_days" type="id" />
     <item name="clear_selected_days" type="id" />
+    <item name="open_quests" type="id" />
+    <item name="open_dailies" type="id" />
+    <item name="open_agundur" type="id" />
 </resources>

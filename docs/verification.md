@@ -27,3 +27,14 @@ Local screenshot test-results/overview.png is ignored and not committed.
 
 User requested saving this visual/functional baseline before exploring alignment
 with https://eternal-lands.agundur.de/ and possible quests/dailies content.
+
+
+## Agundur website links
+
+After baseline commit 25820b6, the user chose direct browser links only.
+Added an Agundur guide card after the Special Day card with Quests, Dailies,
+Haidir, Daritha, Xaquelina and the site homepage. Live feed attribution to
+Mercator remains accurate. No guide content copied and no WebView added.
+Build, all 14 core tests, lint0errors and complete EN/DE resource keys pass.
+The earlier settings automation did not complete because the app became
+not visible/phone locked; do not upgrade that result to passed.

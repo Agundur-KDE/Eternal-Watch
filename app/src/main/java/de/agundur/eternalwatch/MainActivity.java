@@ -70,6 +70,16 @@ public final class MainActivity extends Activity {
         LinearLayout day=card(overview);label(day,R.string.special_heading);
         dayName=text(day,getString(R.string.waiting),23,INK);dayName.setId(R.id.special_day);
         dayDescription=text(day,"",15,MUTED);rolePlay=text(day,"",14,MUTED);
+        LinearLayout guides=card(overview);label(guides,R.string.agundur_heading);
+        text(guides,getString(R.string.guides_title),22,INK);text(guides,getString(R.string.guides_description),13,MUTED);
+        LinearLayout guidesRow=row(guides);
+        button(guidesRow,R.string.quests_link,()->openUrl("https://eternal-lands.agundur.de/quests.html")).setId(R.id.open_quests);
+        button(guidesRow,R.string.dailies_link,()->openUrl("https://eternal-lands.agundur.de/dailies/")).setId(R.id.open_dailies);
+        LinearLayout dailyRow=row(guides);
+        button(dailyRow,R.string.haidir_link,()->openUrl("https://eternal-lands.agundur.de/dailies/haidir.html"));
+        button(dailyRow,R.string.daritha_link,()->openUrl("https://eternal-lands.agundur.de/dailies/daritha.html"));
+        button(dailyRow,R.string.xaquelina_link,()->openUrl("https://eternal-lands.agundur.de/dailies/xaquelina.html"));
+        button(guides,R.string.agundur_website,()->openUrl("https://eternal-lands.agundur.de/")).setId(R.id.open_agundur);
         LinearLayout invasion=card(overview);invasionHeading=label(invasion,R.string.last_report);
         invasionText=text(invasion,getString(R.string.no_report),16,INK);invasionText.setId(R.id.invasion_report);
         invasionAge=text(invasion,"",12,GOLD);text(invasion,getString(R.string.report_note),12,MUTED);

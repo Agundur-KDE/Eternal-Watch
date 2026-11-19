@@ -11,6 +11,8 @@ alarm rules from [EL-Klock](https://github.com/Agundur-KDE/EL-Klock).
 - Latest invasion report with its age, opt-in background monitoring and optional
   Android notification sound. The original unverified horn asset is not included.
 - Home-screen widget with a timestamped clock/day sample and manual refresh.
+- Direct browser links to our [Eternal Lands website](https://eternal-lands.agundur.de/):
+  quests, dailies, Haidir, Daritha and Xaquelina. No embedded WebView or copied guide database.
 - English and German interface; game names and source text remain in English.
 - No account, personal token, tracking SDK, advertising or cloud backend.
 
