@@ -116,3 +116,12 @@ is refreshed when configuration or app-language changes, and the running service
 refreshes its notification. Date/time formatting uses the app language explicitly.
 Game names and live Mercator descriptions/reports remain original English text;
 the linked Agundur website opens in the browser and has its own language/content.
+
+
+The interactive settings smoke test (`python3 tools/check_settings.py --serial
+<USB-SERIAL>`) temporarily exercises the monitor and day-selection controls. It
+accepts the app notification prompt and restores the saved day/monitor choices
+even on failure, using the matching local debug APK to restore the service.
+It does not replace the newer feed cache with an older snapshot. The phone must
+be authorized and unlocked. Restoration helper regressions can be run locally:
+`python3 -m unittest discover -s tools -p test_settings_restore.py`.

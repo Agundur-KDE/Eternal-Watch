@@ -56,3 +56,20 @@ actual RemoteViews widget labels/rendering, plus Russian one/few/many cases at
 locale or launcher layout was modified. Static EN/DE/ES/RU argument and quantity
 validation passed. These checks do not claim every screen/font-size combination
 or an actual event transition was manually tested in each language.
+
+
+## Resumed device checks after the pause
+
+The user returned the Moto with debugging enabled. ADB currently reports
+unauthorized; no device settings have been read or changed in this resumed
+attempt. USB-debugging approval and an unlocked visible app are still required.
+
+The settings test tool now accepts existing day/monitor choices, captures them
+in memory and restores only those keys in a finally block. It preserves the
+latest feed cache and unrelated preferences. Restoration uses a stopped app,
+atomic preference-file replacement and reinstall of the matching local debug APK
+so the real update receiver can restore the saved monitor choice. APK version
+is checked before mutations. Three local regression checks pass for old choices,
+missing defaults, latest-cache preservation and non-mutated input trees.
+This restoration path has not yet been exercised against the returned phone.
+Actual settings/monitor UI checks remain unconfirmed until USB approval.
