@@ -195,7 +195,10 @@ public final class MainActivity extends Activity {
         else Toast.makeText(this,R.string.widget_pin_unavailable,Toast.LENGTH_LONG).show();
     }
     private void about() {
-        new AlertDialog.Builder(this).setTitle(R.string.app_name).setMessage(getString(R.string.about_text,"0.1.0-alpha.1"))
+        String version;
+        try { version=getPackageManager().getPackageInfo(getPackageName(),0).versionName; }
+        catch(android.content.pm.PackageManager.NameNotFoundException e) { throw new IllegalStateException(e); }
+        new AlertDialog.Builder(this).setTitle(R.string.app_name).setMessage(getString(R.string.about_text,version))
             .setPositiveButton(R.string.close,null).setNeutralButton(R.string.view_license,(d,w)->{
                 try(java.io.InputStream in=getAssets().open("LICENSE.txt")) {
                     java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);

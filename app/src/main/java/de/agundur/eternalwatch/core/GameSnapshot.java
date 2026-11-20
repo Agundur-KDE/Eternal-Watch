@@ -53,5 +53,16 @@ public final class GameSnapshot {
         long age=now-invasionStamp;
         return fresh(now) && !invasionText.isEmpty() && invasionStamp>0 && age>=-60000 && age<=900000;
     }
-    public static GameSnapshot newer(GameSnapshot old,GameSnapshot candidate) { return old!=null && candidate.stamp<old.stamp?old:candidate; }
+    private boolean plausibleForStorage(long now) {
+        return stamp>0 && clockStamp>0 && stamp-now<=60000 && clockStamp-now<=60000;
+    }
+    /** Historical samples remain useful; future samples must never order the cache. */
+    public GameSnapshot validateForStorage(long now) {
+        if(!plausibleForStorage(now)) throw new IllegalArgumentException("Future or invalid source timestamp");
+        return this;
+    }
+    public static GameSnapshot newer(GameSnapshot old,GameSnapshot candidate,long now) {
+        candidate.validateForStorage(now);
+        return old!=null && old.plausibleForStorage(now) && candidate.stamp<old.stamp?old:candidate;
+    }
 }

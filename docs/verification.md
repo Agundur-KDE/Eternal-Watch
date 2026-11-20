@@ -93,3 +93,83 @@ now keeps only the visible test activity awake; no global screen setting changes
 Updated APK installed; build, 14 core tests, translations and lint0errors pass.
 A final complete settings run still requires the user to unlock the phone.
 No claim that the individual selection correction passed on device yet.
+
+## Complete settings check – 20 November 2026
+
+The full `tools/check_settings.py --serial <USB-SERIAL>` run passed on the
+authorized Moto g54 5G with exit code 0. The real UI confirmed:
+
+- Monitoring starts the foreground service and stops it again, including the
+  persisted restart choice.
+- Select-all saves all 49 Special Days; clear removes the selection.
+- Searching for Reconstruction Day, submitting the search keyboard action and
+  tapping the individual day saves exactly that day. This confirms the earlier
+  keyboard correction on the device.
+- The finally path restores the original day selection and monitoring choice,
+  while preserving the latest feed cache.
+
+The initial attempt was blocked before app mutations because the sandbox could
+not reach/start the ADB server (`smartsocket` listener: Operation not permitted).
+Running the same script with approved access outside the sandbox resolved that
+tooling issue; future device runs require that access as well.
+
+This completes the previously interrupted settings check. Actual notification
+delivery for a new game event, launcher widget pinning/resizing, reboot restore,
+Android 16 and long-term battery/Doze behavior remain unconfirmed.
+
+## Security remediation – 20 November 2026, alpha.2
+
+Addressed the three findings in `security-audit-2026-11-20.md`:
+
+- Updated Gradle from 8.11.1 to 8.14.7 with the official distribution checksum,
+  regenerated wrapper JAR/scripts and checked the JAR against the official hash
+  `ad16bca46cb71bb5887c546860d93992aeee35c1fdaf4a242b0a612375d937e0`.
+  AGP remains 8.10.1; the complete debug build passes with this combination.
+- Source timestamps over one minute in the future cannot enter cache ordering or
+  persistence. Existing implausible cache entries are discarded when loading;
+  ordering also permits recovery from an already poisoned in-memory sample.
+  Historical samples and the original clock/alarm freshness rules remain valid.
+- Network and cached raw input are bounded to 256 KiB of UTF-8 and eight nested
+  containers before the recursive Android parser is invoked. Complete JSON grammar
+  validation is iterative and rejects lenient extensions. Expected fields are
+  extracted as scalars; arbitrary recursive object-to-Map conversion is removed.
+
+TDD evidence: with the new tests and no-op protection stubs, 27 JVM tests ran,
+11 failed by assertion (five timestamp regressions and six input-guard tests).
+After the first implementation all 27 passed. The two other new cases verify that ordinary
+input, historical data and the exact one-minute skew boundary remain accepted.
+
+The independent Astra follow-up caught a grammar mismatch in the first structural
+scanner: quotes embedded in Android's unquoted literals could hide nesting from
+the scan. An additional regression (`rejectsUnquotedTokensAndLenientGrammarBeforePlatformParser`)
+was observed failing with 28 tests / one failure. The scanner was replaced with
+complete iterative JSON grammar validation: explicit object/array states, quoted
+keys, checked escapes, strict numbers/literals and separators. All 28 tests then
+passed. Android checks additionally reject unquoted embedded quotes, leading-zero
+numbers and trailing commas. The version in the Info dialog now comes from the
+installed package instead of a duplicated alpha.1 literal.
+
+Final `bash tools/build_apk.sh`: assembleDebug, 28 JVM tests, all four translation
+sets and lintDebug pass. Lint reports zero errors and seven warnings (existing
+preference writes, platform locale attribute, debug locale checks, package query,
+unused widget description and clock placeholder). Three settings restoration
+helper tests also pass. Gradle reports deprecated features for a future Gradle 9
+migration; the SDK toolchain reports its existing XML-version warning.
+
+Installed versionCode 2 / 0.1.0-alpha.2 on the authorized Moto g54 5G.
+Actual `DeviceChecks` instrumentation passed: the production Android JSON parser
+rejects 5,000 nested objects/arrays, oversized multibyte strings, future timestamps,
+structured/boolean values in expected scalar fields and comment syntax. Plain and
+wrapped healthy data, bounded unknown fields, null optional text, historical data
+and recovery after invalid inputs pass. These inputs exist only in memory and do
+not replace the user's cache. Existing live-cache, DE/EN/ES/RU notification/widget,
+widget rendering/action and quantity checks pass in the same run.
+
+This does not constitute an exhaustive second security audit. Repository content
+filtering/dependency verification remain optional build hardening; a production
+release-signing check still requires an actual release artifact. The earlier
+outstanding real-event, launcher, reboot and long-term behavior checks remain open.
+
+Final targeted Astra static review approved all three original remediations,
+including the complete grammar validator, and the corrected version display.
+The reviewer inspected source/tests without executing its own test run.

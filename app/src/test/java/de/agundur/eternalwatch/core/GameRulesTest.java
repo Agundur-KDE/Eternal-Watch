@@ -75,7 +75,38 @@ public class GameRulesTest {
         assertSame(old,r.state());assertFalse(r.special());assertFalse(r.invasion());
     }
     @Test public void delayedResponsesNeverReplaceNewerSample() {
-        GameSnapshot old=sample();Map<String,Object> p=payload();p.put("Timestamp",now-1000);assertSame(old,GameSnapshot.newer(old,GameSnapshot.parse(p)));
-        p.put("Timestamp",now+1000);GameSnapshot next=GameSnapshot.parse(p);assertSame(next,GameSnapshot.newer(old,next));
+        GameSnapshot old=sample();Map<String,Object> p=payload();p.put("Timestamp",now-1000);assertSame(old,GameSnapshot.newer(old,GameSnapshot.parse(p),now));
+        p.put("Timestamp",now+1000);GameSnapshot next=GameSnapshot.parse(p);assertSame(next,GameSnapshot.newer(old,next,now));
+    }
+    @Test public void futureResponseCannotPoisonExistingCache() {
+        for(String field:List.of("Timestamp","Gametimestamp")) {
+            Map<String,Object> p=payload();p.put(field,now+60001);
+            assertThrows(IllegalArgumentException.class,()->GameSnapshot.newer(sample(),GameSnapshot.parse(p),now));
+        }
+    }
+    @Test public void futureResponseCannotBecomeInitialCache() {
+        Map<String,Object> p=payload();p.put("Timestamp",Long.MAX_VALUE/2);
+        assertThrows(IllegalArgumentException.class,()->GameSnapshot.newer(null,GameSnapshot.parse(p),now));
+    }
+    @Test public void persistedFutureSampleIsRejectedOnLoad() {
+        for(String field:List.of("Timestamp","Gametimestamp")) {
+            Map<String,Object> p=payload();p.put(field,now+86400000);
+            assertThrows(IllegalArgumentException.class,()->GameSnapshot.parse(p).validateForStorage(now));
+        }
+    }
+    @Test public void healthyFeedRecoversFromPreviouslyPoisonedCache() {
+        Map<String,Object> p=payload();p.put("Timestamp",now+86400000);
+        GameSnapshot healthy=sample();
+        assertSame(healthy,GameSnapshot.newer(GameSnapshot.parse(p),healthy,now));
+    }
+    @Test public void clockStampPoisonCannotBlockOlderHealthyResponse() {
+        Map<String,Object> p=payload();p.put("Timestamp",now+1000);p.put("Gametimestamp",now+86400000);
+        GameSnapshot healthy=sample();assertSame(healthy,GameSnapshot.newer(GameSnapshot.parse(p),healthy,now));
+    }
+    @Test public void historicalCacheAndOneMinuteClockSkewRemainAllowed() {
+        GameSnapshot historical=sample();assertSame(historical,historical.validateForStorage(now+86400000));
+        Map<String,Object> p=payload();p.put("Timestamp",now+60000);p.put("Gametimestamp",now+60000);
+        GameSnapshot edge=GameSnapshot.parse(p);assertSame(edge,edge.validateForStorage(now));
+        assertTrue(edge.fresh(now));
     }
 }

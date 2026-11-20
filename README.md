@@ -28,7 +28,7 @@ bash tools/build_apk.sh
 
 Output: `dist/Eternal-Watch-debug.apk`. Build artifacts, signing keys and local
 device test results are ignored by Git. The GitHub repository remains private.
-Version: 0.1.0-alpha.1; this is a development APK, not a store release.
+Version: 0.1.0-alpha.2; this is a development APK, not a store release.
 
 ## Monitoring and widget behavior
 
@@ -62,6 +62,15 @@ Outdated, invalid and disconnected states are explicit; the last valid payload
 remains available as historical data. Older response timestamps cannot replace
 newer samples.
 
+Future source timestamps more than one minute ahead are rejected before cache
+ordering or persistence. Previously stored implausible samples are discarded on
+load; valid historical data remains available offline. Both network and cache
+input pass iterative strict JSON grammar validation with a 256-KiB UTF-8 limit
+and eight-container-depth limit before the platform JSON parser runs. Only expected scalar feed fields are extracted;
+unknown fields are not recursively converted. Nonstandard comment/single-quote
+JSON syntax is rejected. The Gradle wrapper uses checksum-pinned 8.14.7, including
+its updated scripts and wrapper JAR.
+
 The live feed sometimes puts “Today is a special day:” in GameDayName and the
 actual day in GameDayDescription. Known names are resolved from the bundled
 English catalog before selection matching. Matching handles case/whitespace and
@@ -76,10 +85,14 @@ local app data. No game credentials or personal tokens are collected.
 
 ## Verification
 
-The production Java rules are imported by 14 JVM tests. They were observed failing
-against unimplemented stubs and then passing after implementation. Coverage includes
+The production Java core is imported by 28 JVM tests. The original 14 were observed
+failing against unimplemented stubs and then passing after implementation. For the
+security changes, 11 regression tests were observed failing before the fixes and
+then passing; a further grammar regression was observed red during review and
+green after correction. Two additional new cases preserve accepted input behavior. Coverage includes
 61-second timing, rollover, invalid/stale data, generic feed headings, selected-day
-notifications, silent startup, duplicates and invasion toggles/age.
+notifications, silent startup, duplicates, invasion toggles/age, future-cache
+recovery, input size, nesting and structural preflight checks.
 
 ```sh
 python3 tools/check_device.py --serial <USB-SERIAL>
@@ -90,7 +103,8 @@ The first tool checks real network data and visible UI, keeping screenshots only
 in ignored test-results. DeviceChecks exists only in debug builds and renders the
 actual production widget RemoteViews off-screen, without changing launcher layout.
 It also checks cached data, all four localized notification/widget variants,
-and German/Russian quantity resources. Results actually
+German/Russian quantity resources and the production parser against malicious
+inputs entirely in memory (without modifying saved settings/cache). Results actually
 observed on the test device are recorded in docs/verification.md.
 
 ## License and provenance

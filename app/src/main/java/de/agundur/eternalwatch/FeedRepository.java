@@ -22,17 +22,31 @@ public final class FeedRepository {
     private FeedRepository() { }
     public static SharedPreferences prefs(Context c) { return c.getSharedPreferences("watch",Context.MODE_PRIVATE); }
     public static int pollSeconds(Context c) { return Math.max(15,Math.min(300,prefs(c).getInt("poll_seconds",30))); }
-    private static Map<String,Object> map(JSONObject json) throws JSONException {
+    static GameSnapshot parseFeed(String raw,long now) throws JSONException {
+        FeedInput.validate(raw);
+        JSONObject json=new JSONObject(raw);
+        if(json.has("eldata")) json=json.getJSONObject("eldata");
         Map<String,Object> values=new HashMap<>();
-        Iterator<String> keys=json.keys();
-        while(keys.hasNext()) { String key=keys.next();Object v=json.get(key);values.put(key,v==JSONObject.NULL?null:v instanceof JSONObject?map((JSONObject)v):v); }
-        return values;
+        String[] fields={"GameDay","GameMonth","GameYear","GameHour","GameMinute","GameSecond",
+            "GameDayName","GameDayDescription","GameDayRolePlay","Gametimestamp","Timestamp",
+            "GIWS_Monsters","GIWS_Text","GIWS_date_diff"};
+        for(String key:fields) {
+            Object v=json.opt(key);
+            if(v==JSONObject.NULL) v=null;
+            if(v!=null && !(v instanceof String) && !(v instanceof Number))
+                throw new IllegalArgumentException("Expected scalar feed field");
+            values.put(key,v);
+        }
+        return GameSnapshot.parse(values).validateForStorage(now);
     }
     public static GameSnapshot snapshot(Context c) {
         if (!loaded) synchronized(FeedRepository.class) {
             if (!loaded) {
-                try { String raw=prefs(c).getString("sample","");if(!raw.isEmpty()) cached=GameSnapshot.parse(map(new JSONObject(raw))); }
-                catch (JSONException | IllegalArgumentException ignored) { }
+                try { String raw=prefs(c).getString("sample","");if(!raw.isEmpty()) cached=parseFeed(raw,System.currentTimeMillis()); }
+                catch (JSONException | IllegalArgumentException ignored) {
+                    cached=null;
+                    prefs(c).edit().remove("sample").putString("error","invalid").apply();
+                }
                 loaded=true;
             }
         }
@@ -64,13 +78,14 @@ public final class FeedRepository {
                         if(remaining<=0) throw new IOException("Request deadline");
                         connection.setReadTimeout((int)Math.min(4000,remaining));
                         count=input.read(buffer);if(count==-1)break;
-                        if(bytes.size()+count>262144) throw new IOException("Response too large");bytes.write(buffer,0,count);
+                        if(bytes.size()+count>FeedInput.MAX_BYTES) throw new IOException("Response too large");bytes.write(buffer,0,count);
                     }
                 }
                 String raw=bytes.toString(StandardCharsets.UTF_8.name());
-                GameSnapshot next=GameSnapshot.parse(map(new JSONObject(raw)));
+                long receivedAt=System.currentTimeMillis();
+                GameSnapshot next=parseFeed(raw,receivedAt);
                 GameSnapshot old=snapshot(c);
-                if(GameSnapshot.newer(old,next)==next) {
+                if(GameSnapshot.newer(old,next,receivedAt)==next) {
                     cached=next;loaded=true;
                     prefs(c).edit().putString("sample",raw).putString("error",next.fresh(System.currentTimeMillis())?"":"stale").apply();
                     evaluate(c,next);
