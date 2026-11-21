@@ -27,8 +27,11 @@ bash tools/build_apk.sh
 ```
 
 Output: `dist/Eternal-Watch-debug.apk`. Build artifacts, signing keys and local
-device test results are ignored by Git. The GitHub repository remains private.
-Version: 0.1.0-alpha.4; this is a development APK, not a store release.
+device test results are ignored by Git. Public source and signed alpha releases
+are available from this GitHub repository.
+Version: 0.1.0-alpha.4; an early test version, not a Google Play release.
+Download the signed APK from [Releases](https://github.com/Agundur-KDE/Eternal-Watch/releases).
+The local build command above produces a debug APK.
 
 ## Monitoring and widget behavior
 
@@ -152,8 +155,8 @@ observed on the test device are recorded in docs/verification.md.
 
 ## License and provenance
 
-GPL-3.0-only; see LICENSE and NOTICE.md. The repository is private; no source or
-APK publication has been made. This is an unofficial Eternal Lands companion.
+GPL-3.0-only; see LICENSE and NOTICE.md. Release downloads include the matching
+source archive and a SHA-256 manifest. This is an unofficial Eternal Lands companion.
 No EL-Klock KDE template source or unverified third-party audio was copied.
 
 

@@ -1,7 +1,7 @@
 # Local release preparation
 
 Nothing in these tools uploads an app, publishes a GitHub release or changes
-repository visibility. The GitHub repository stays private. Internal audits,
+repository visibility. Publication is a separate user-authorized action. Internal audits,
 device results, credentials and signing keys are excluded from source packages.
 
 ## Requirements
@@ -83,8 +83,7 @@ download so recipients can obtain the source corresponding to that binary.
 Repository visibility need not change for this source-download route. Validate
 the source archive and release hashes before any publication.
 
-From an extracted source archive, builds do not require access to the private Git
-repository: set the SDK/JDK environment and run bash tools/build_apk.sh or
+From an extracted source archive, builds do not require a Git checkout: set the SDK/JDK environment and run bash tools/build_apk.sh or
 ./gradlew --no-daemon assembleRelease. Recipients can sign their own unsigned
 builds. The packaging/provenance tool itself requires a Git checkout.
 

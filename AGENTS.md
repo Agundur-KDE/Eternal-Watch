@@ -3,8 +3,9 @@
 Parent instructions in `/home/alec/projects/AGENTS.md` apply.
 
 - Android app for Eternal Lands; working directory is this repository.
-- Keep the GitHub repository private. Publishing or changing visibility requires
-  an explicit user instruction.
+- The user authorized making this repository public and publishing alpha.4 on
+  21 November 2026. Further releases or visibility changes require user instruction.
+  The older resolved audit may remain in Git history; do not rewrite history to hide it.
 - Keep internal audit reports local and ignored by Git (docs/security-audit-*.md
   and docs/audits/). Do not include them in public source packages. Keep factual
   build/test documentation separate from internal vulnerability reviews.
