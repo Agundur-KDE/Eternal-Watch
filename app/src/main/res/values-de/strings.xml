@@ -78,4 +78,6 @@
     <string name="paused_data_saver">Aktualisierung pausiert · Datensparmodus</string>
     <string name="paused_offline">Aktualisierung pausiert · keine bestätigte Internetverbindung</string>
     <string name="monitor_paused">Eternal Watch: Überwachung pausiert</string>
+    <string name="monitor_channel_blocked">Überwachung pausiert: Erlaube den Benachrichtigungskanal „%1$s“ in den Android-Einstellungen. Deine Überwachungsauswahl bleibt erhalten; öffne die App nach der Freigabe erneut.</string>
+    <string name="monitor_channel_settings">Benachrichtigungskanal der Überwachung</string>
 </resources>

@@ -79,4 +79,6 @@
     <string name="paused_data_saver">Updates paused · Data Saver</string>
     <string name="paused_offline">Updates paused · no verified internet connection</string>
     <string name="monitor_paused">Eternal Watch monitoring paused</string>
+    <string name="monitor_channel_blocked">Monitoring paused: allow the “%1$s” notification channel in Android settings. Your monitoring choice is retained; reopen this app after enabling the channel.</string>
+    <string name="monitor_channel_settings">Monitor notification channel</string>
 </resources>

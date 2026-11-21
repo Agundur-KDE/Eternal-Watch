@@ -305,3 +305,46 @@ The distribution APK remains debug-signed. No artifact has been published.
 Production signing, a matching full GPL source package and a smoke test of the
 exact signed release artifact remain outstanding. Play submission requirements
 are separate. The 33 JVM tests were independently recompiled and passed again.
+
+## Request lifecycle and monitor checks – 21 November 2026, alpha.4
+
+Updated the complete wrapper to checksum-pinned Gradle 8.14.8. The distribution
+hash was fetched from Gradle's official endpoint; the regenerated wrapper JAR
+matches its official SHA-256 reference. The JAR hash is unchanged from 8.14.7.
+
+Requests now have an independent eight-second logical completion budget covering
+connection setup, headers and body. Late I/O cannot submit accepted results.
+Prepared immutable results are processed in completion order outside the request
+lock; transient status belongs to the latest attempt. One pending refresh is
+coalesced and rechecks current network policy/monitor interest. I/O and abort
+workers are capped; a platform call that ignores interruption can temporarily
+occupy an I/O slot, but does not hold logical completion or grow worker queues.
+
+The monitor checks the actual notification channel as well as app permission.
+A blocked channel stops polling while retaining the user's saved choice. Settings
+show the channel and open its Android settings directly. Reopening after enabling
+the channel resumes an opted-in monitor. Silent LOW importance remains supported.
+
+Observed checks on versionCode 4 / 0.1.0-alpha.4:
+
+- Debug APK build, 39 JVM tests, lintDebug and complete 80-resource translation
+  sets pass. The six request-coordinator regressions cover actual slow HTTP
+  headers, late results, coalesced overlapping requests, bounded worker exhaustion,
+  elapsed budget checks and delayed UI processing with a later failed request.
+- Alpha.4 installed on the Moto g54 5G. DeviceChecks passes the Android parser,
+  locale/widget checks and actual disposable NONE/LOW notification channels.
+- Real Android channel UI test passes: blocking the actual monitor channel stops
+  the foreground service; saved monitoring remains enabled; the app shows the
+  channel warning and does not restart while blocked. Enabling the channel and
+  reopening the app resumes the service. Original app values and channel state
+  are restored, preserving the latest feed cache.
+- Full network device checks pass again for unmetered/metered/explicit opt-in/
+  Data Saver and automatic background resume, with exact original settings and
+  stopped temporary service verified afterwards. Three settings-restoration
+  helper tests pass.
+
+The local packaging workflow is documented in release.md. It requires a clean
+commit, builds from an isolated extraction and stages complete artifact sets
+before exposing them. Production signing identity, exact signed-release device
+test and any account-side Play requirements are separate from these debug checks.
+No public distribution has been performed.

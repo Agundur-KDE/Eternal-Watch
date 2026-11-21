@@ -58,6 +58,7 @@ final class NetworkAccess {
         FeedRepository.prefs(c).registerOnSharedPreferenceChangeListener(preferences);
     }
     static void setVisible(Context c,boolean value) { visible=value;if(value)changed(c); }
+    static boolean interested(Context c) { return visible || WatchService.monitoring(c); }
     private static void changed(Context c) {
         MAIN.post(()->{
             Access access=current(c);
@@ -66,8 +67,7 @@ final class NetworkAccess {
             WatchWidget.updateAll(c);
             WatchService.refreshNotification(c);
             // Do not introduce continuous fetching for widget-only use.
-            if(access.allowed() && (visible || FeedRepository.prefs(c).getBoolean("monitor_enabled",false)))
-                FeedRepository.request(c,true);
+            if(access.allowed() && interested(c))FeedRepository.reconnect(c);
         });
     }
 }

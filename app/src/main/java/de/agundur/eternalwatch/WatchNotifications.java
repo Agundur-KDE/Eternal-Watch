@@ -11,6 +11,19 @@ final class WatchNotifications {
         return (Build.VERSION.SDK_INT<33 || c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)==PackageManager.PERMISSION_GRANTED)
             && c.getSystemService(NotificationManager.class).areNotificationsEnabled();
     }
+    static boolean monitorPermitted(Context c) {
+        NotificationManager manager=c.getSystemService(NotificationManager.class);
+        if(manager.getNotificationChannel("monitor")==null)channels(c);
+        return permitted(c) && channelPermitted(manager,manager.getNotificationChannel("monitor"));
+    }
+    static boolean channelPermitted(NotificationManager manager,NotificationChannel channel) {
+        if(channel==null || channel.getImportance()==NotificationManager.IMPORTANCE_NONE)return false;
+        if(Build.VERSION.SDK_INT>=28 && channel.getGroup()!=null) {
+            NotificationChannelGroup group=manager.getNotificationChannelGroup(channel.getGroup());
+            if(group!=null && group.isBlocked())return false;
+        }
+        return true;
+    }
     static void channels(Context c) {
         NotificationManager m=c.getSystemService(NotificationManager.class);
         m.createNotificationChannel(new NotificationChannel("monitor",c.getString(R.string.channel_monitor),NotificationManager.IMPORTANCE_LOW));

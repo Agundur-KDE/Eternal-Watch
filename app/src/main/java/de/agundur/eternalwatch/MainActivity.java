@@ -25,7 +25,7 @@ public final class MainActivity extends Activity {
     private final Handler handler=new Handler(Looper.getMainLooper());
     private LinearLayout overview,settings;
     private WatchFaceView face;
-    private TextView status,date,sample,dayName,dayDescription,rolePlay,invasionHeading,invasionText,invasionAge,selectionCount;
+    private TextView status,date,sample,dayName,dayDescription,rolePlay,invasionHeading,invasionText,invasionAge,selectionCount,monitorAvailability;
     private Switch monitoring,sound,metered;
     private Button overviewTab,settingsTab;
     private final List<CheckBox> dayBoxes=new ArrayList<>();
@@ -98,6 +98,7 @@ public final class MainActivity extends Activity {
     private void buildSettings() {
         LinearLayout live=card(settings);text(live,getString(R.string.monitor_heading),22,INK);
         monitoring=switcher(live,R.string.monitor_enabled,prefs().getBoolean("monitor_enabled",false),checked->{ if(!syncing) setMonitoring(checked); });monitoring.setId(R.id.monitor_toggle);
+        monitorAvailability=text(live,"",13,GOLD);monitorAvailability.setId(R.id.monitor_channel_status);
         text(live,getString(R.string.monitor_help),13,MUTED);text(live,getString(R.string.restart_help),13,MUTED);
         text(live,getString(R.string.network_heading),18,INK);
         metered=switcher(live,R.string.allow_metered,prefs().getBoolean("allow_metered",false),checked->{
@@ -116,6 +117,8 @@ public final class MainActivity extends Activity {
             @Override public void onNothingSelected(AdapterView<?> p) { }
         });
         button(live,R.string.open_notification_settings,()->startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,getPackageName())));
+        button(live,R.string.monitor_channel_settings,()->startActivity(new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE,getPackageName()).putExtra(Settings.EXTRA_CHANNEL_ID,"monitor")));
         if(Build.VERSION.SDK_INT>=33) {
             Intent languageSettings=new Intent(Settings.ACTION_APP_LOCALE_SETTINGS,Uri.parse("package:"+getPackageName()));
             if(languageSettings.resolveActivity(getPackageManager())!=null)
@@ -163,6 +166,10 @@ public final class MainActivity extends Activity {
         if(enabled && !WatchNotifications.permitted(this)) {
             Toast.makeText(this,R.string.notifications_blocked,Toast.LENGTH_LONG).show();syncing=true;monitoring.setChecked(false);syncing=false;return;
         }
+        if(enabled && !WatchNotifications.monitorPermitted(this)) {
+            Toast.makeText(this,getString(R.string.monitor_channel_blocked,getString(R.string.channel_monitor)),Toast.LENGTH_LONG).show();
+            syncing=true;monitoring.setChecked(false);syncing=false;return;
+        }
         prefs().edit().putBoolean("monitor_enabled",enabled).commit();FeedRepository.resetAlarms();
         if(enabled) startForegroundService(new Intent(this,WatchService.class));else stopService(new Intent(this,WatchService.class));
     }
@@ -176,6 +183,9 @@ public final class MainActivity extends Activity {
         long now=System.currentTimeMillis();GameSnapshot data=FeedRepository.snapshot(this);face.update(data,now,prefs().getBoolean("seconds",false));
         String error=prefs().getString("error","");boolean valid=data!=null && data.currentSeconds(now)>=0;
         int paused=NetworkAccess.reason(NetworkAccess.current(this).status());
+        boolean monitorAllowed=WatchNotifications.monitorPermitted(this);
+        monitorAvailability.setText(monitorAllowed?"":!WatchNotifications.permitted(this)?getString(R.string.notifications_blocked):getString(R.string.monitor_channel_blocked,getString(R.string.channel_monitor)));
+        monitorAvailability.setVisibility(monitorAllowed?View.GONE:View.VISIBLE);
         status.setText(getString(paused!=0?paused:"loading".equals(error)?R.string.loading:"network".equals(error)?R.string.network_error:"invalid".equals(error)?R.string.invalid_data:valid?R.string.live:data==null?R.string.waiting:R.string.outdated));
         status.setTextColor(paused==0 && valid?0xff9cccae:GOLD);
         if(data!=null) {
@@ -229,7 +239,11 @@ public final class MainActivity extends Activity {
     private Switch switcher(LinearLayout parent,int label,boolean checked,Toggle action) {
         Switch v=new Switch(this);v.setText(label);v.setTextColor(INK);v.setTextSize(15);v.setMinHeight(dp(56));v.setPadding(0,dp(8),0,dp(8));v.setChecked(checked);parent.addView(v,new LinearLayout.LayoutParams(-1,-2));v.setOnCheckedChangeListener((b,c)->action.change(c));return v;
     }
-    @Override protected void onResume() { super.onResume();NetworkAccess.setVisible(getApplicationContext(),true);handler.post(tick); }
+    @Override protected void onResume() {
+        super.onResume();NetworkAccess.setVisible(getApplicationContext(),true);
+        if(prefs().getBoolean("monitor_enabled",false) && WatchNotifications.monitorPermitted(this))startForegroundService(new Intent(this,WatchService.class));
+        handler.post(tick);
+    }
     @Override protected void onPause() { handler.removeCallbacks(tick);NetworkAccess.setVisible(getApplicationContext(),false);super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle out) { out.putBoolean("settings",settings.getVisibility()==View.VISIBLE);super.onSaveInstanceState(out); }
 }

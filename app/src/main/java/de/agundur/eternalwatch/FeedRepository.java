@@ -7,18 +7,50 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import android.os.Handler;
+import android.os.Looper;
 import de.agundur.eternalwatch.core.*;
 
 public final class FeedRepository {
     public static final String ENDPOINT="https://mercator.holy-eternalland.de/botmanagement/elinfo.json";
-    private static final ExecutorService NETWORK=Executors.newSingleThreadExecutor();
-    private static final AtomicBoolean BUSY=new AtomicBoolean();
+    private static Context application;
+    private static final Handler MAIN=new Handler(Looper.getMainLooper());
+    private static final RequestCoordinator REQUESTS=new RequestCoordinator(8000,android.os.SystemClock::elapsedRealtime,
+        command->MAIN.post(command),new RequestCoordinator.Observer() {
+            @Override public void accepted(RequestCoordinator.Attempt attempt) { lastAttempt=attempt.startedMillis(); }
+            @Override public void started(RequestCoordinator.Attempt attempt) {
+                prefs(application).edit().putString("error","loading").apply();
+            }
+            @Override public void finished(RequestCoordinator.Attempt attempt,RequestCoordinator.Result result) {
+                if(result==RequestCoordinator.Result.OK && attempt.value() instanceof Prepared prepared) {
+                    try {
+                        GameSnapshot next=prepared.snapshot();long now=System.currentTimeMillis();
+                        GameSnapshot old=snapshot(application);
+                        if(GameSnapshot.newer(old,next,now)==next) {
+                            cached=next;loaded=true;
+                            prefs(application).edit().putString("sample",prepared.raw()).apply();
+                            evaluate(application,next);
+                            if(!next.fresh(now))result=RequestCoordinator.Result.STALE;
+                        } else result=RequestCoordinator.Result.STALE;
+                    } catch(IllegalArgumentException clockChanged) { result=RequestCoordinator.Result.INVALID; }
+                }
+                if(REQUESTS.latest(attempt)) {
+                    String error=switch(result) {
+                        case OK, CANCELLED -> "";
+                        case STALE -> "stale";
+                        case INVALID -> "invalid";
+                        case NETWORK, TIMEOUT -> "network";
+                    };
+                    prefs(application).edit().putString("error",error).apply();
+                }
+                WatchWidget.updateAll(application);
+            }
+        });
     private static volatile GameSnapshot cached;
     private static volatile boolean loaded;
     private static volatile long lastAttempt;
     private static AlarmEngine.State baseline=AlarmEngine.State.empty();
+    private record Prepared(GameSnapshot snapshot,String raw) { }
     private FeedRepository() { }
     public static SharedPreferences prefs(Context c) { return c.getSharedPreferences("watch",Context.MODE_PRIVATE); }
     public static int pollSeconds(Context c) { return Math.max(15,Math.min(300,prefs(c).getInt("poll_seconds",30))); }
@@ -55,59 +87,58 @@ public final class FeedRepository {
     public static synchronized void resetAlarms() { baseline=AlarmEngine.State.empty(); }
     public static void request(Context context,boolean force) { request(context,force,()->{}); }
     public static void request(Context context,boolean force,Runnable complete) {
-        Context c=context.getApplicationContext();
+        Context c=context.getApplicationContext();application=c;
         if(!NetworkAccess.current(c).allowed()) { WatchWidget.updateAll(c);complete.run();return; }
         long now=android.os.SystemClock.elapsedRealtime();
-        if ((!force && now-lastAttempt<pollSeconds(c)*1000L) || !BUSY.compareAndSet(false,true)) { complete.run();return; }
-        lastAttempt=now;
-        NETWORK.execute(()->{
-            HttpURLConnection connection=null;
-            long deadline=android.os.SystemClock.elapsedRealtime()+8000;
-            try {
-                NetworkAccess.Access access=NetworkAccess.current(c);
-                if(!access.allowed())return;
-                prefs(c).edit().putString("error","loading").apply();
-                connection=(HttpURLConnection)access.network().openConnection(new URL(ENDPOINT));
-                connection.setConnectTimeout(4000);connection.setReadTimeout(4000);
-                connection.setRequestProperty("Accept","application/json");
-                connection.setRequestProperty("Cache-Control","no-cache");
-                connection.setInstanceFollowRedirects(false);
-                if(!NetworkAccess.permits(c,access.network()))return;
-                if(connection.getResponseCode()!=200) throw new IOException("HTTP response");
-                ByteArrayOutputStream bytes=new ByteArrayOutputStream();
-                try(InputStream input=connection.getInputStream()) {
-                    byte[] buffer=new byte[4096];int count;
-                    while(true) {
-                        if(!NetworkAccess.permits(c,access.network()))return;
-                        long remaining=deadline-android.os.SystemClock.elapsedRealtime();
-                        if(remaining<=0) throw new IOException("Request deadline");
-                        connection.setReadTimeout((int)Math.min(4000,remaining));
-                        count=input.read(buffer);if(count==-1)break;
-                        if(bytes.size()+count>FeedInput.MAX_BYTES) throw new IOException("Response too large");bytes.write(buffer,0,count);
-                    }
-                }
-                String raw=bytes.toString(StandardCharsets.UTF_8.name());
-                if(!NetworkAccess.permits(c,access.network()))return;
-                long receivedAt=System.currentTimeMillis();
-                GameSnapshot next=parseFeed(raw,receivedAt);
-                GameSnapshot old=snapshot(c);
-                if(GameSnapshot.newer(old,next,receivedAt)==next) {
-                    cached=next;loaded=true;
-                    prefs(c).edit().putString("sample",raw).putString("error",next.fresh(System.currentTimeMillis())?"":"stale").apply();
-                    evaluate(c,next);
-                } else prefs(c).edit().putString("error","stale").apply();
-            } catch(JSONException | IllegalArgumentException e) { prefs(c).edit().putString("error","invalid").apply(); }
-            catch(IOException e) { prefs(c).edit().putString("error","network").apply(); }
-            finally {
-                if(connection!=null) connection.disconnect();
-                BUSY.set(false);
-                try { WatchWidget.updateAll(c); } finally { complete.run(); }
-            }
+        if(!force && lastAttempt>0 && !REQUESTS.busy() && now-lastAttempt<pollSeconds(c)*1000L) { complete.run();return; }
+        REQUESTS.submit(attempt->fetch(c,attempt),complete,force?()->request(c,true):null);
+    }
+    static void reconnect(Context c) {
+        if(!NetworkAccess.interested(c))return;
+        application=c.getApplicationContext();
+        // Re-evaluate interest and network policy when an overlapping request ends.
+        REQUESTS.submit(attempt->fetch(c,attempt),()->{},()->{
+            if(NetworkAccess.interested(c) && NetworkAccess.current(c).allowed())request(c,true);
         });
+    }
+    private static RequestCoordinator.Result fetch(Context c,RequestCoordinator.Attempt attempt) throws IOException {
+        HttpURLConnection connection=null;
+        try {
+            attempt.check();
+            NetworkAccess.Access access=NetworkAccess.current(c);
+            if(!access.allowed())return RequestCoordinator.Result.CANCELLED;
+            connection=(HttpURLConnection)access.network().openConnection(new URL(ENDPOINT));
+            HttpURLConnection opened=connection;attempt.cleanup(opened::disconnect);
+            connection.setConnectTimeout(attempt.remainingMillis(4000));
+            connection.setReadTimeout(attempt.remainingMillis(4000));
+            connection.setRequestProperty("Accept","application/json");
+            connection.setRequestProperty("Cache-Control","no-cache");
+            connection.setInstanceFollowRedirects(false);
+            attempt.check();
+            if(!NetworkAccess.permits(c,access.network()))return RequestCoordinator.Result.CANCELLED;
+            if(connection.getResponseCode()!=200)throw new IOException("HTTP response");
+            ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+            try(InputStream input=connection.getInputStream()) {
+                byte[] buffer=new byte[4096];int count;
+                while(true) {
+                    if(!NetworkAccess.permits(c,access.network()))return RequestCoordinator.Result.CANCELLED;
+                    connection.setReadTimeout(attempt.remainingMillis(4000));
+                    count=input.read(buffer);if(count==-1)break;
+                    if(bytes.size()+count>FeedInput.MAX_BYTES)throw new IOException("Response too large");
+                    bytes.write(buffer,0,count);
+                }
+            }
+            attempt.check();
+            if(!NetworkAccess.permits(c,access.network()))return RequestCoordinator.Result.CANCELLED;
+            String raw=bytes.toString(StandardCharsets.UTF_8.name());
+            long receivedAt=System.currentTimeMillis();
+            GameSnapshot next=parseFeed(raw,receivedAt);
+            return attempt.offer(new Prepared(next,raw))?RequestCoordinator.Result.OK:RequestCoordinator.Result.CANCELLED;
+        } catch(JSONException | IllegalArgumentException e) { return RequestCoordinator.Result.INVALID; }
     }
     private static synchronized void evaluate(Context c,GameSnapshot next) {
         SharedPreferences p=prefs(c);
-        if(!p.getBoolean("monitor_enabled",false)) { baseline=AlarmEngine.State.empty();return; }
+        if(!p.getBoolean("monitor_enabled",false) || !WatchNotifications.monitorPermitted(c)) { baseline=AlarmEngine.State.empty();return; }
         AlarmEngine.Result result=AlarmEngine.transition(next,baseline,System.currentTimeMillis(),p.getStringSet("selected_days",Collections.emptySet()),p.getBoolean("invasions",true),p.getBoolean("sound",false));
         baseline=result.state();
         if(result.special()) WatchNotifications.special(c,next.name);

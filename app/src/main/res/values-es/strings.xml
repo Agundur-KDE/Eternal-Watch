@@ -82,4 +82,6 @@
     <string name="paused_data_saver">Actualización en pausa · ahorro de datos</string>
     <string name="paused_offline">Actualización en pausa · sin conexión a internet verificada</string>
     <string name="monitor_paused">Supervisión de Eternal Watch en pausa</string>
+    <string name="monitor_channel_blocked">Supervisión en pausa: permite el canal de notificaciones «%1$s» en los ajustes de Android. Se conserva tu elección de supervisión; vuelve a abrir la aplicación tras habilitar el canal.</string>
+    <string name="monitor_channel_settings">Canal de notificaciones de supervisión</string>
 </resources>

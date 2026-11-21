@@ -83,4 +83,6 @@
     <string name="paused_data_saver">Обновление приостановлено · экономия трафика</string>
     <string name="paused_offline">Обновление приостановлено · нет подтверждённого доступа к интернету</string>
     <string name="monitor_paused">Мониторинг Eternal Watch приостановлен</string>
+    <string name="monitor_channel_blocked">Мониторинг приостановлен: разрешите канал уведомлений «%1$s» в настройках Android. Ваш выбор мониторинга сохранён; после включения канала откройте приложение снова.</string>
+    <string name="monitor_channel_settings">Канал уведомлений мониторинга</string>
 </resources>

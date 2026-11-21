@@ -18,6 +18,7 @@ public final class DeviceChecks extends Instrumentation {
         try {
             FeedSecurityChecks.run();
             Context c=getTargetContext();
+            MonitorChannelChecks.run(c);
             GameSnapshot snapshot=FeedRepository.snapshot(c);
             require(snapshot!=null,"Live sample is cached");
             require(!snapshot.name.isEmpty(),"Resolved day name is present");
@@ -68,7 +69,7 @@ public final class DeviceChecks extends Instrumentation {
                 require(russian.getResources().getQuantityString(R.plurals.selection_count,5,5).equals("Выбрано 5 дней"),"Russian many");
                 require(russian.getResources().getQuantityString(R.plurals.selection_count,21,21).equals("Выбран 21 день"),"Russian 21");
             } finally { WatchNotifications.channels(c); }
-            result.putString("stream","Feed security checks (actual Android JSON parser), live sample, DE/EN/ES/RU translations, localized notifications, widget rendering/actions and Russian quantity forms passed. No launcher layout or device locale modified.\n");
+            result.putString("stream","Feed security checks (actual Android JSON parser), live sample, DE/EN/ES/RU translations, localized notifications, blocked/silent monitor channels, widget rendering/actions and Russian quantity forms passed. No launcher layout or device locale modified.\n");
             finish(Activity.RESULT_OK,result);
         } catch(Throwable error) {
             result.putString("stream","Device checks failed: "+error.getClass().getSimpleName()+" "+error.getMessage()+"\n");

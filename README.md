@@ -28,7 +28,7 @@ bash tools/build_apk.sh
 
 Output: `dist/Eternal-Watch-debug.apk`. Build artifacts, signing keys and local
 device test results are ignored by Git. The GitHub repository remains private.
-Version: 0.1.0-alpha.3; this is a development APK, not a store release.
+Version: 0.1.0-alpha.4; this is a development APK, not a store release.
 
 ## Monitoring and widget behavior
 
@@ -37,6 +37,10 @@ monitoring is OFF by default. Enable it in Alerts & settings and grant notificat
 permission to continue checking while the app is closed. It uses a persistent
 notification and the chosen 15–300 second poll interval (default 30 seconds).
 Stop from the app or notification; that choice survives updates and restarts.
+The monitor also checks that its notification channel is enabled. If Android
+blocks it, background polling stops, the saved monitoring choice stays intact,
+and settings show a direct link to that channel. Reopening the app after enabling
+the channel restores an opted-in monitor.
 If enabled, the boot receiver restores monitoring after the first device unlock.
 An actual reboot and restoration after unlock were verified on the Moto g54 5G
 with Android 15; other Android versions/manufacturers remain unverified.
@@ -107,7 +111,7 @@ load; valid historical data remains available offline. Both network and cache
 input pass iterative strict JSON grammar validation with a 256-KiB UTF-8 limit
 and eight-container-depth limit before the platform JSON parser runs. Only expected scalar feed fields are extracted;
 unknown fields are not recursively converted. Nonstandard comment/single-quote
-JSON syntax is rejected. The Gradle wrapper uses checksum-pinned 8.14.7, including
+JSON syntax is rejected. The Gradle wrapper uses checksum-pinned 8.14.8, including
 its updated scripts and wrapper JAR.
 
 The live feed sometimes puts “Today is a special day:” in GameDayName and the
@@ -124,7 +128,7 @@ local app data. No game credentials or personal tokens are collected.
 
 ## Verification
 
-The production Java core is imported by 33 JVM tests. The original 14 were observed
+The production Java core is imported by 39 JVM tests. The original 14 were observed
 failing against unimplemented stubs and then passing after implementation. For the
 security changes, 11 regression tests were observed failing before the fixes and
 then passing; a further grammar regression was observed red during review and
@@ -156,7 +160,7 @@ No EL-Klock KDE template source or unverified third-party audio was copied.
 ## Languages
 
 German (de), English (en, full fallback), Spanish (es) and Russian (ru) are
-required project languages. All 78 translatable resources are complete, including
+required project languages. All 80 translatable resources are complete, including
 widget text, channels, notifications, status/errors and website links. Russian
 quantity forms include one/few/many/other; Spanish includes one/many/other.
 `tools/check_translations.py` runs before every APK build to reject missing keys,
@@ -187,3 +191,18 @@ and quiet invasion notification methods, verifies Android's active notifications
 and removes those test messages before finishing. It refuses to overwrite existing
 event notifications or run while monitoring is enabled. This checks posting,
 content and channels, not a real feed transition, audible delivery or heads-up UI.
+
+
+## Release packaging
+
+See [the local release workflow](docs/release.md) for unsigned review artifacts,
+external production signing and a matching source tarball from a clean commit.
+The tools do not publish anything or change repository visibility.
+
+Feed requests have an independent eight-second completion deadline covering
+connection setup, response headers and the body. Expired requests cannot publish
+cache data or alarms. A pending refresh/reconnect is coalesced and rechecks network
+policy before running; abandoned loading states are cleared. I/O and abort workers
+are bounded, including if platform DNS or disconnect does not respond to interrupt.
+Such a platform stall can temporarily exhaust I/O slots, but callers still finish
+with an error rather than accumulating workers or waiting indefinitely.

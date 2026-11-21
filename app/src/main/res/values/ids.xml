@@ -5,6 +5,7 @@
     <item name="special_day" type="id" />
     <item name="invasion_report" type="id" />
     <item name="monitor_toggle" type="id" />
+    <item name="monitor_channel_status" type="id" />
     <item name="allow_metered_toggle" type="id" />
     <item name="search_days" type="id" />
     <item name="add_widget" type="id" />
