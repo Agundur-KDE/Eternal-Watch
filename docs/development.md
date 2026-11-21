@@ -196,3 +196,20 @@ policy before running; abandoned loading states are cleared. I/O and abort worke
 are bounded, including if platform DNS or disconnect does not respond to interrupt.
 Such a platform stall can temporarily exhaust I/O slots, but callers still finish
 with an error rather than accumulating workers or waiting indefinitely.
+
+## Testing the production-signed APK
+
+The production APK deliberately has no debug instrumentation or run-as access.
+Use its actual interface for the device smoke test. First compare the installed
+APK hash to the published release and verify its non-debuggable package flags.
+Back up any existing debug installation and choices before arranging an
+incompatible signing-key replacement.
+
+For reliable UI checks, verify the phone is unlocked, use short independently
+recorded test sections, and scroll slowly so small controls are not skipped by
+fling momentum. Background the app normally before a process restart, allowing
+Android's queued SharedPreferences writes to finish; killing it immediately
+after injecting a tap tests a timing race rather than ordinary saved settings.
+If a screen-timeout extension is needed, record its original value before the
+change and restore/read it back at the end, including after interrupted checks.
+Keep device backups, screenshots and per-device results in ignored test-results.

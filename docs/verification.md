@@ -362,3 +362,33 @@ when store and key password paths are the same. The packager now creates separat
 owner-only temporary copies outside build inputs and source packages. The retained
 regression uses the same password path for both fields and passes with the actual
 Android/JDK signing tools. Internal logs/results remain ignored by Git.
+
+## Published production APK device test – 21 November 2026
+
+The exact APK published in v0.1.0-alpha.4 was installed on the Moto g54 5G with
+Android 15. Its installed APK SHA-256 matches the release asset:
+`3d4e0483614c934c3c08d0cdad73d61726bbf44827a114e6d1a61e1936053bb2`.
+The package reports 0.1.0-alpha.4 and is not debuggable. The preceding debug APK
+and preferences were backed up locally before the incompatible signing-key
+replacement. No production instrumentation or run-as access was enabled.
+
+Observed through the actual release interface:
+
+- Live Mercator synchronization, game date and Special Day display; the visible
+  seconds advance when enabled and the original display choice is restored.
+- Notification permission flow; foreground monitoring starts, continues with
+  the activity closed, and stops through the app switch.
+- Metered connection choice survives a normal close/process restart and is
+  restored to its original value.
+- Select all 49 days, clear, search and individual selection work. The individual
+  selection and its later clearing persist across process restarts.
+- The About dialog displays the installed release version. Original effective
+  app choices and notification permission are restored, with no monitor left
+  running. The production release remains installed.
+
+Checks were completed in short UI sections after automatic screen locking
+interrupted the initial run. The temporary screen-timeout extension was restored
+and read back. Screenshots, original debug backup and per-device result records
+are local ignored artifacts. This closes the pending signed-release smoke test;
+launcher placement/resizing, Android 16, real-event notification sound and
+long-term battery/Doze checks remain separate.
