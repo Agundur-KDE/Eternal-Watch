@@ -60,6 +60,16 @@ def main():
     with tempfile.TemporaryDirectory(prefix='.ew-staging-',dir=destination) as temporary:
         scratch=Path(temporary);work=scratch/'source';work.mkdir()
         output=scratch/'artifacts';output.mkdir(mode=0o700)
+        if config:
+            config=dict(config)
+            # apksigner caches file readers and consumes consecutive lines when a
+            # path is reused. Independent private copies also support PKCS12's
+            # usual shared store/key password without exposing it in arguments.
+            for field in ('store_password_file','key_password_file'):
+                password=scratch/(field+'.txt')
+                password.touch(mode=0o600)
+                shutil.copyfile(config[field],password)
+                config[field]=str(password)
         with tarfile.open(fileobj=io.BytesIO(source)) as archive:
             for member in archive.getmembers():
                 path=Path(member.name)
