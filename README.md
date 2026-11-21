@@ -27,6 +27,10 @@
 **No ads. No account. No tracking SDK.** Interface in 🇩🇪 German, 🇬🇧 English,
 🇪🇸 Spanish and 🇷🇺 Russian; game names and live reports stay in English.
 
+<p align="center">
+  <img src="docs/assets/screenshot-overview.png" alt="Eternal Watch overview in German, with the EL clock and current Special Day" width="280">
+</p>
+
 ## 🎮 Get started
 
 Download the **APK** from [Releases](https://github.com/Agundur-KDE/Eternal-Watch/releases)
