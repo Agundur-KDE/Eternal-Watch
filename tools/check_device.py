@@ -4,15 +4,19 @@ Raw UI dumps are deleted after reading; screenshots stay in ignored test-results
 """
 import argparse
 import json
+import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import time
 import xml.etree.ElementTree as ET
 
-ADB='/home/alec/projects/KCast-App/.tools/android-sdk/platform-tools/adb'
 PACKAGE='de.agundur.eternalwatch'
 ROOT=Path(__file__).resolve().parents[1]
+_sdk=os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT')
+_local=ROOT.parent/'KCast-App/.tools/android-sdk/platform-tools/adb'
+ADB=os.environ.get('ADB') or (str(Path(_sdk)/'platform-tools/adb') if _sdk else shutil.which('adb') or (str(_local) if _local.is_file() else 'adb'))
 UI_FILE='/data/local/tmp/eternal-watch-check.xml'
 
 def main():

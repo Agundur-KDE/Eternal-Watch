@@ -67,7 +67,8 @@ def main():
                     raise RuntimeError('Unsafe source archive entry')
                 if any(part in {'build','.local','test-results','.git','audits'} for part in path.parts) or 'security-audit-' in member.name or member.name.endswith(('.jks','.keystore','.p12','.pfx')):
                     raise RuntimeError('Forbidden private/build material in source package')
-            archive.extractall(work)
+            if hasattr(tarfile,'data_filter'):archive.extractall(work,filter='data')
+            else:archive.extractall(work)  # All entries were validated above (Python 3.9).
         run('python3','tools/check_translations.py',directory=work)
         tasks=['assembleRelease','testDebugUnitTest','lintRelease']
         if args.bundle:tasks.append('bundleRelease')
