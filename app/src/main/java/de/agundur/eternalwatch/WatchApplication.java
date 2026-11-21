@@ -4,7 +4,7 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 public final class WatchApplication extends Application {
-    @Override public void onCreate() { super.onCreate();refreshLanguage(); }
+    @Override public void onCreate() { super.onCreate();NetworkAccess.initialize(this);refreshLanguage(); }
     @Override public void onConfigurationChanged(Configuration configuration) {
         super.onConfigurationChanged(configuration);refreshLanguage();
     }

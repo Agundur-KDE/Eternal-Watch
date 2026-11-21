@@ -49,7 +49,9 @@ public final class DeviceChecks extends Instrumentation {
                     Configuration configuration=new Configuration(c.getResources().getConfiguration());configuration.setLocale(Locale.forLanguageTag(row[0]));
                     Context language=c.createConfigurationContext(configuration);
                     require(language.getString(R.string.refresh).equals(row[1]),row[0]+" refresh translation");
-                    require(WatchNotifications.ongoing(language).extras.getCharSequence(android.app.Notification.EXTRA_TITLE).toString().equals(row[2]),row[0]+" notification translation");
+                    int paused=NetworkAccess.reason(NetworkAccess.current(language).status());
+                    String expectedTitle=paused==0?row[2]:language.getString(R.string.monitor_paused);
+                    require(WatchNotifications.ongoing(language).extras.getCharSequence(android.app.Notification.EXTRA_TITLE).toString().equals(expectedTitle),row[0]+" notification translation");
                     AtomicReference<Throwable> widgetFailure=new AtomicReference<>();
                     runOnMainSync(()->{
                         try {

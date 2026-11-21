@@ -9,7 +9,11 @@ import java.util.concurrent.*;
 public final class WatchService extends Service {
     private final ScheduledExecutorService scheduler=Executors.newSingleThreadScheduledExecutor();
     private boolean scheduled;
-    @Override public void onCreate() { super.onCreate();startForeground(1,WatchNotifications.ongoing(this)); }
+    private static volatile boolean running;
+    @Override public void onCreate() { super.onCreate();running=true;startForeground(1,WatchNotifications.ongoing(this)); }
+    static void refreshNotification(Context c) {
+        if(running && WatchNotifications.permitted(c))c.getSystemService(NotificationManager.class).notify(1,WatchNotifications.ongoing(c));
+    }
     @Override public int onStartCommand(Intent intent,int flags,int id) {
         if(intent!=null && "STOP".equals(intent.getAction())) FeedRepository.prefs(this).edit().putBoolean("monitor_enabled",false).commit();
         if(!FeedRepository.prefs(this).getBoolean("monitor_enabled",false) || !WatchNotifications.permitted(this)) {
@@ -21,7 +25,7 @@ public final class WatchService extends Service {
         }
         return START_STICKY;
     }
-    @Override public void onDestroy() { scheduler.shutdownNow();super.onDestroy(); }
+    @Override public void onDestroy() { running=false;scheduler.shutdownNow();super.onDestroy(); }
     @Override public void onConfigurationChanged(Configuration configuration) {
         super.onConfigurationChanged(configuration);
         if(FeedRepository.prefs(this).getBoolean("monitor_enabled",false) && WatchNotifications.permitted(this))

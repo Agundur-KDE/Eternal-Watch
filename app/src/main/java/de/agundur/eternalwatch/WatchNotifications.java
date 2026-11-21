@@ -23,8 +23,10 @@ final class WatchNotifications {
     static Notification ongoing(Context c) {
         channels(c);
         PendingIntent stop=PendingIntent.getService(c,1,new Intent(c,WatchService.class).setAction("STOP"),PendingIntent.FLAG_IMMUTABLE);
+        int paused=NetworkAccess.reason(NetworkAccess.current(c).status());
         return new Notification.Builder(c,"monitor").setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(c.getString(R.string.monitor_active)).setContentText(c.getString(R.string.monitor_status,FeedRepository.pollSeconds(c)))
+            .setContentTitle(c.getString(paused==0?R.string.monitor_active:R.string.monitor_paused))
+            .setContentText(paused==0?c.getString(R.string.monitor_status,FeedRepository.pollSeconds(c)):c.getString(paused))
             .setContentIntent(open(c)).setOngoing(true).addAction(new Notification.Action.Builder(null,c.getString(R.string.stop),stop).build()).build();
     }
     static void special(Context c,String name) { send(c,"days",101,c.getString(R.string.special_notification),name); }

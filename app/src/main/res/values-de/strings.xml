@@ -71,4 +71,11 @@
     <string name="xaquelina_link">Xaquelina</string>
     <string name="agundur_website">eternal-lands.agundur.de</string>
     <string name="app_language">App-Sprache</string>
+    <string name="network_heading">Datenverbindungen</string>
+    <string name="allow_metered">Getaktete Verbindungen erlauben (Mobilfunk, Hotspots)</string>
+    <string name="network_help">Standardmäßig aus: Spieldaten werden nur über ungetaktete Verbindungen geladen. Das gilt auch für manuelle und Widget-Aktualisierungen. Getaktete Verbindungen können Kosten verursachen. Der Datensparmodus pausiert getaktete Abrufe, auch wenn Android diese App davon ausnimmt. Gespeicherte Daten bleiben verfügbar; mit einer erlaubten Verbindung geht es automatisch weiter. Guide-Links öffnen sich separat im Browser.</string>
+    <string name="paused_metered">Aktualisierung pausiert · getaktete Verbindung</string>
+    <string name="paused_data_saver">Aktualisierung pausiert · Datensparmodus</string>
+    <string name="paused_offline">Aktualisierung pausiert · keine bestätigte Internetverbindung</string>
+    <string name="monitor_paused">Eternal Watch: Überwachung pausiert</string>
 </resources>

@@ -33,6 +33,9 @@ public final class WatchWidget extends AppWidgetProvider {
             stamp=c.getString(R.string.widget_sample,DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT,c.getResources().getConfiguration().getLocales().get(0)).format(new Date(data.clockStamp)));
         }
         views.setTextViewText(R.id.widget_time,clock);views.setTextViewText(R.id.widget_day,day);views.setTextViewText(R.id.widget_stamp,stamp);
+        int paused=NetworkAccess.reason(NetworkAccess.current(c).status());
+        views.setTextViewText(R.id.widget_status,paused==0?"":c.getString(paused));
+        views.setViewVisibility(R.id.widget_status,paused==0?android.view.View.GONE:android.view.View.VISIBLE);
         views.setOnClickPendingIntent(R.id.widget_root,WatchNotifications.open(c));
         views.setOnClickPendingIntent(R.id.widget_refresh,PendingIntent.getBroadcast(c,2,new Intent(c,WatchWidget.class).setAction(REFRESH),PendingIntent.FLAG_IMMUTABLE));
         return views;

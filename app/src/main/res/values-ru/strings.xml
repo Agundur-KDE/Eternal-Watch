@@ -76,4 +76,11 @@
     <string name="xaquelina_link">Xaquelina</string>
     <string name="agundur_website">eternal-lands.agundur.de</string>
     <string name="app_language">Язык приложения</string>
+    <string name="network_heading">Подключения для передачи данных</string>
+    <string name="allow_metered">Разрешить лимитные подключения (мобильная сеть, точки доступа)</string>
+    <string name="network_help">По умолчанию выключено: игровые данные загружаются только через безлимитные подключения. Это также относится к ручному обновлению и виджету. Лимитные подключения могут требовать оплаты. Экономия трафика приостанавливает обновления через них, даже если Android добавил приложение в исключения. Сохранённые данные остаются доступны; обновления возобновляются автоматически при разрешённом подключении. Ссылки на руководства открываются отдельно в браузере.</string>
+    <string name="paused_metered">Обновление приостановлено · лимитное подключение</string>
+    <string name="paused_data_saver">Обновление приостановлено · экономия трафика</string>
+    <string name="paused_offline">Обновление приостановлено · нет подтверждённого доступа к интернету</string>
+    <string name="monitor_paused">Мониторинг Eternal Watch приостановлен</string>
 </resources>

@@ -29,8 +29,8 @@ def main():
             if raw:sample=json.loads(raw);break
         except subprocess.CalledProcessError:pass
         time.sleep(.4)
-    if sample is None:raise RuntimeError('No valid live feed saved; inspect connectivity')
-    print('Live Mercator JSON fetched, parsed and cached.')
+    if sample is None:raise RuntimeError('No saved feed sample; inspect connectivity')
+    print('Mercator JSON is present in the app cache; this alone does not prove a new network fetch.')
     run('shell','uiautomator','dump',UI_FILE)
     try:tree=ET.fromstring(run('shell','cat',UI_FILE))
     finally:run('shell','rm','-f',UI_FILE)

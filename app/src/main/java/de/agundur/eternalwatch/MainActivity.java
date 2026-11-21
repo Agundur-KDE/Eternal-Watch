@@ -26,7 +26,7 @@ public final class MainActivity extends Activity {
     private LinearLayout overview,settings;
     private WatchFaceView face;
     private TextView status,date,sample,dayName,dayDescription,rolePlay,invasionHeading,invasionText,invasionAge,selectionCount;
-    private Switch monitoring,sound;
+    private Switch monitoring,sound,metered;
     private Button overviewTab,settingsTab;
     private final List<CheckBox> dayBoxes=new ArrayList<>();
     private ScrollView scroll;
@@ -99,6 +99,11 @@ public final class MainActivity extends Activity {
         LinearLayout live=card(settings);text(live,getString(R.string.monitor_heading),22,INK);
         monitoring=switcher(live,R.string.monitor_enabled,prefs().getBoolean("monitor_enabled",false),checked->{ if(!syncing) setMonitoring(checked); });monitoring.setId(R.id.monitor_toggle);
         text(live,getString(R.string.monitor_help),13,MUTED);text(live,getString(R.string.restart_help),13,MUTED);
+        text(live,getString(R.string.network_heading),18,INK);
+        metered=switcher(live,R.string.allow_metered,prefs().getBoolean("allow_metered",false),checked->{
+            if(!syncing)prefs().edit().putBoolean("allow_metered",checked).apply();
+        });metered.setId(R.id.allow_metered_toggle);
+        text(live,getString(R.string.network_help),13,MUTED);
         switcher(live,R.string.invasion_enabled,prefs().getBoolean("invasions",true),checked->{ prefs().edit().putBoolean("invasions",checked).apply();sound.setEnabled(checked); });
         sound=switcher(live,R.string.invasion_sound,prefs().getBoolean("sound",false),checked->prefs().edit().putBoolean("sound",checked).apply());sound.setEnabled(prefs().getBoolean("invasions",true));
         switcher(live,R.string.show_seconds,prefs().getBoolean("seconds",false),checked->prefs().edit().putBoolean("seconds",checked).apply());
@@ -170,8 +175,9 @@ public final class MainActivity extends Activity {
     private void render() {
         long now=System.currentTimeMillis();GameSnapshot data=FeedRepository.snapshot(this);face.update(data,now,prefs().getBoolean("seconds",false));
         String error=prefs().getString("error","");boolean valid=data!=null && data.currentSeconds(now)>=0;
-        status.setText(getString("loading".equals(error)?R.string.loading:"network".equals(error)?R.string.network_error:"invalid".equals(error)?R.string.invalid_data:valid?R.string.live:data==null?R.string.waiting:R.string.outdated));
-        status.setTextColor(valid?0xff9cccae:GOLD);
+        int paused=NetworkAccess.reason(NetworkAccess.current(this).status());
+        status.setText(getString(paused!=0?paused:"loading".equals(error)?R.string.loading:"network".equals(error)?R.string.network_error:"invalid".equals(error)?R.string.invalid_data:valid?R.string.live:data==null?R.string.waiting:R.string.outdated));
+        status.setTextColor(paused==0 && valid?0xff9cccae:GOLD);
         if(data!=null) {
             date.setText(getString(R.string.game_date,data.day,data.month,data.year));sample.setText(getString(R.string.last_sample,DateFormat.getTimeInstance(DateFormat.SHORT,getResources().getConfiguration().getLocales().get(0)).format(new Date(data.clockStamp))));
             dayName.setText(data.name);boolean redundant=SpecialDays.key(data.name).equals(SpecialDays.key(data.description));
@@ -181,7 +187,7 @@ public final class MainActivity extends Activity {
             invasionHeading.setText(data.recentInvasion(now)?R.string.recent_report:R.string.last_report);
             invasionAge.setText(data.invasionStamp>0?age(data.invasionStamp,now):"");
         }
-        syncing=true;monitoring.setChecked(prefs().getBoolean("monitor_enabled",false));syncing=false;
+        syncing=true;monitoring.setChecked(prefs().getBoolean("monitor_enabled",false));metered.setChecked(prefs().getBoolean("allow_metered",false));syncing=false;
     }
     private String age(long stamp,long now) {
         long seconds=(now-stamp)/1000;
@@ -223,7 +229,7 @@ public final class MainActivity extends Activity {
     private Switch switcher(LinearLayout parent,int label,boolean checked,Toggle action) {
         Switch v=new Switch(this);v.setText(label);v.setTextColor(INK);v.setTextSize(15);v.setMinHeight(dp(56));v.setPadding(0,dp(8),0,dp(8));v.setChecked(checked);parent.addView(v,new LinearLayout.LayoutParams(-1,-2));v.setOnCheckedChangeListener((b,c)->action.change(c));return v;
     }
-    @Override protected void onResume() { super.onResume();handler.post(tick); }
-    @Override protected void onPause() { handler.removeCallbacks(tick);super.onPause(); }
+    @Override protected void onResume() { super.onResume();NetworkAccess.setVisible(getApplicationContext(),true);handler.post(tick); }
+    @Override protected void onPause() { handler.removeCallbacks(tick);NetworkAccess.setVisible(getApplicationContext(),false);super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle out) { out.putBoolean("settings",settings.getVisibility()==View.VISIBLE);super.onSaveInstanceState(out); }
 }

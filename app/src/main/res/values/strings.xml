@@ -72,4 +72,11 @@
     <string name="xaquelina_link">Xaquelina</string>
     <string name="agundur_website">eternal-lands.agundur.de</string>
     <string name="app_language">App language</string>
+    <string name="network_heading">Data connections</string>
+    <string name="allow_metered">Allow metered connections (mobile data, hotspots)</string>
+    <string name="network_help">Off by default: game data uses unmetered connections only. This also applies to manual and widget refreshes. Metered connections may cost money. Data Saver pauses metered updates, including when Android exempts this app. Cached data stays available; updates resume automatically on an allowed connection. Guide links open separately in your browser.</string>
+    <string name="paused_metered">Updates paused · metered connection</string>
+    <string name="paused_data_saver">Updates paused · Data Saver</string>
+    <string name="paused_offline">Updates paused · no verified internet connection</string>
+    <string name="monitor_paused">Eternal Watch monitoring paused</string>
 </resources>

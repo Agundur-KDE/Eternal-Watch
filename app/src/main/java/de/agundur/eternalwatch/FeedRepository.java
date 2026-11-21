@@ -56,6 +56,7 @@ public final class FeedRepository {
     public static void request(Context context,boolean force) { request(context,force,()->{}); }
     public static void request(Context context,boolean force,Runnable complete) {
         Context c=context.getApplicationContext();
+        if(!NetworkAccess.current(c).allowed()) { WatchWidget.updateAll(c);complete.run();return; }
         long now=android.os.SystemClock.elapsedRealtime();
         if ((!force && now-lastAttempt<pollSeconds(c)*1000L) || !BUSY.compareAndSet(false,true)) { complete.run();return; }
         lastAttempt=now;
@@ -63,17 +64,21 @@ public final class FeedRepository {
             HttpURLConnection connection=null;
             long deadline=android.os.SystemClock.elapsedRealtime()+8000;
             try {
+                NetworkAccess.Access access=NetworkAccess.current(c);
+                if(!access.allowed())return;
                 prefs(c).edit().putString("error","loading").apply();
-                connection=(HttpURLConnection)new URL(ENDPOINT).openConnection();
+                connection=(HttpURLConnection)access.network().openConnection(new URL(ENDPOINT));
                 connection.setConnectTimeout(4000);connection.setReadTimeout(4000);
                 connection.setRequestProperty("Accept","application/json");
                 connection.setRequestProperty("Cache-Control","no-cache");
                 connection.setInstanceFollowRedirects(false);
+                if(!NetworkAccess.permits(c,access.network()))return;
                 if(connection.getResponseCode()!=200) throw new IOException("HTTP response");
                 ByteArrayOutputStream bytes=new ByteArrayOutputStream();
                 try(InputStream input=connection.getInputStream()) {
                     byte[] buffer=new byte[4096];int count;
                     while(true) {
+                        if(!NetworkAccess.permits(c,access.network()))return;
                         long remaining=deadline-android.os.SystemClock.elapsedRealtime();
                         if(remaining<=0) throw new IOException("Request deadline");
                         connection.setReadTimeout((int)Math.min(4000,remaining));
@@ -82,6 +87,7 @@ public final class FeedRepository {
                     }
                 }
                 String raw=bytes.toString(StandardCharsets.UTF_8.name());
+                if(!NetworkAccess.permits(c,access.network()))return;
                 long receivedAt=System.currentTimeMillis();
                 GameSnapshot next=parseFeed(raw,receivedAt);
                 GameSnapshot old=snapshot(c);

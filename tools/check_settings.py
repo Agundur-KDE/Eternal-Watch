@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise settings through the real UI and restore the saved app choices.
 Explicitly accepts this app's notification permission prompt for the monitor test.
-Only selected_days and monitor_enabled are modified; restore them even on failure.
+Only selected_days, monitor_enabled and allow_metered are modified; restore on failure.
 """
 import argparse
 import copy
@@ -17,7 +17,7 @@ from check_device import ADB,PACKAGE,UI_FILE
 def restore_choices(current,before):
     """Preserve new feed data and unrelated preferences, including missing defaults."""
     result=copy.deepcopy(current)
-    keys={'selected_days','monitor_enabled'}
+    keys={'selected_days','monitor_enabled','allow_metered'}
     for node in list(result):
         if node.get('name') in keys:result.remove(node)
     for node in before:
@@ -103,6 +103,13 @@ def main():
             time.sleep(.2)
         if service() or prefs().get('monitor_enabled')!='false':raise RuntimeError('Monitoring did not stop')
         print('Real monitor switch stops the service and clears saved restart choice.',flush=True)
+        original_metered=prefs().get('allow_metered','false')=='true'
+        tap('allow_metered_toggle',True)
+        for _ in range(20):
+            if (prefs().get('allow_metered','false')=='true')!=original_metered:break
+            time.sleep(.2)
+        else:raise RuntimeError('Metered connection switch did not persist its new value')
+        print('Real metered connection switch persists the changed choice.',flush=True)
         tap('select_all_days',True)
         expect_selection(49)
         tap('clear_selected_days')
@@ -132,9 +139,9 @@ def main():
                 time.sleep(.2)
             if service()!=expected:raise RuntimeError('Choices restored, but original service state did not recover')
             after=prefs()
-            if any(after.get(key)!=original.get(key) for key in ('selected_days','monitor_enabled')):
+            if any(after.get(key)!=original.get(key) for key in ('selected_days','monitor_enabled','allow_metered')):
                 raise RuntimeError('Original alert choices were not restored')
-            print('Original day selection and monitoring choice restored; latest feed cache preserved.',flush=True)
+            print('Original day selection, monitoring and metered connection choices restored; latest feed cache preserved.',flush=True)
 
 if __name__=='__main__':
     try:main()

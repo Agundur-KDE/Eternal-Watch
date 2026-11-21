@@ -119,7 +119,7 @@ Android 16 and long-term battery/Doze behavior remain unconfirmed.
 
 ## Security remediation – 20 November 2026, alpha.2
 
-Addressed the three findings in `security-audit-2026-11-20.md`:
+Completed the following feed-input and build-toolchain corrections:
 
 - Updated Gradle from 8.11.1 to 8.14.7 with the official distribution checksum,
   regenerated wrapper JAR/scripts and checked the JAR against the official hash
@@ -173,3 +173,135 @@ outstanding real-event, launcher, reboot and long-term behavior checks remain op
 Final targeted Astra static review approved all three original remediations,
 including the complete grammar validator, and the corrected version display.
 The reviewer inspected source/tests without executing its own test run.
+
+## Continued device verification – 21 November 2026
+
+Moto g54 5G connected and authorized; device reports Android 15. No Android 16
+result is claimed. The overview shows a synchronized Mercator sample, Normal Day
+and readable German UI; its local ignored screenshot was inspected. An initial
+overview run overlapped instrumentation and could not see the activity; a separate
+repeat passed. Future UI and instrumentation checks should run sequentially.
+
+The complete settings smoke test passes again: foreground monitor start/stop,
+select all 49 days, clear, search and select Reconstruction Day. Original day
+selection and monitoring choice were restored, preserving the current cache.
+All three local restoration helper tests pass.
+
+Added an explicit debug-only NotificationChecks instrumentation with localized
+synthetic test bodies in DE/EN/ES/RU. On the actual Moto it called the production
+Special Day and quiet invasion notification methods. Both were present in Android
+active notifications with the expected channel, title, test body and content intent;
+the quiet channel has no sound. Test notifications are canceled before finishing.
+The check refuses existing event notifications and enabled monitoring to avoid
+overwriting real alerts. It neither injects feed data nor modifies user choices.
+This does not verify a real feed event transition, audible delivery, heads-up
+presentation or a user tapping the notification.
+
+The new debug APK was built and installed. All 28 JVM tests, translation checks
+and lintDebug pass; existing toolchain/deprecation warnings remain. The general
+DeviceChecks instrumentation passes again on that APK (Android parser security,
+cached sample, four languages, notification construction, widget rendering/actions
+and quantity forms).
+
+Corrected check_device.py's output: finding saved JSON proves cache presence,
+not a new network request. The UI synchronization status is reported separately.
+
+Actual launcher pinning/resizing and long-term battery/Doze behavior remain open.
+
+### Actual reboot restoration – 21 November 2026
+
+User explicitly authorized a real phone reboot. Original monitoring was off,
+with no monitor_enabled key stored and no foreground service. Saved that exact
+preference state and the pre-reboot kernel boot ID locally in ignored test-results.
+Enabled monitoring through the real settings UI and verified the persisted choice
+and running foreground service before sending adb reboot.
+
+After the device returned and the user unlocked it, read-only ADB checks confirmed
+a changed kernel boot ID, sys.boot_completed=1, user state RUNNING_UNLOCKED and
+WatchService running with isForeground=true; monitor_enabled remained true. No
+manual activity launch, service start, synthetic boot broadcast or APK replacement
+was issued between the reboot and this observation. Reboot restoration passes on
+this Moto with Android 15. The observation establishes the state after unlock,
+not the exact startup latency or behavior before first unlock.
+
+Then restored the original absent monitor_enabled key and inactive service,
+retaining all other current preferences and latest feed data. The same debug APK
+was reinstalled only after the successful reboot observation, to restore normal
+package state using the established settings-test recovery path. Verified exact
+monitor preference restoration and no running foreground monitor.
+
+The local ADB helper initially used cmd user is-user-unlocked, which this Android
+version does not support. Replaced that read-only query with the supported
+am get-started-user-state 0 and required RUNNING_UNLOCKED before evaluating the
+result. No application behavior was changed for this test.
+
+## Metered connection policy – 21 November 2026, alpha.3
+
+Implemented the user's requested default of unmetered-only game data, with an
+explicit allow_metered choice in settings. New and existing installations default
+to false when the key is absent. Android network capabilities determine metering,
+not whether the transport is Wi-Fi or mobile. ACCESS_NETWORK_STATE is the only
+new permission (a normal permission without a runtime prompt).
+
+The central request gate applies to the open activity, foreground service, widget
+updates and manual refresh, including forced requests. Data Saver pauses metered
+requests even if the app is exempt from Android's background restriction. No
+validated internet connection, metering restrictions and Data Saver each have an
+explicit localized pause reason in the overview, ongoing notification and widget.
+Cached source data/timestamps remain available. Feed requests are bound to the
+checked Network and recheck policy before connection, during reads and before
+accepting a response. Existing in-flight bytes cannot be undone; this is not a
+zero-byte guarantee at the instant of a policy change.
+
+Default-network/capability callbacks, Data Saver broadcasts and the preference
+listener update status and resume fetching for an open app or enabled monitor.
+Widget-only use does not acquire continuous reconnect polling. No game-time,
+alarm-selection or feed-validity rules were changed. External browser guide links
+follow browser settings, as explained in the localized help.
+
+Observed final verification on the Moto g54 5G, Android 15:
+
+- VersionCode 3 / 0.1.0-alpha.3 debug APK built and installed. All 33 JVM tests
+  (28 existing plus five network policy tests), translation validation for 78
+  resources in DE/EN/ES/RU, lintDebug and three settings-restoration tests pass.
+- tools/check_network.py passes against real Android Wi-Fi metering overrides:
+  unmetered ALLOWED, metered METERED by default, metered ALLOWED after explicit
+  opt-in, and DATA_SAVER despite opt-in. Blocked ordinary and forced requests
+  complete without modifying cache/error; permitted requests receive valid data.
+- Four-language production RemoteViews and notification construction show the
+  expected pause reason. The previous declared widget minimum clipped the refresh
+  control; its minimum height is now 240 dp. Layout checks at the actual declared
+  minimum width/height pass in all four languages for allowed and paused states.
+- The real foreground monitor shows a paused notification on metered Wi-Fi. After
+  closing its activity and making that Wi-Fi unmetered, it automatically performs
+  a successful feed request and returns the notification to the monitoring state.
+- The network test verifies restoration of exact original Wi-Fi override values,
+  Data Saver and all app choices (excluding the intentionally refreshed cache and
+  its status), including absent default keys. The temporary service is stopped.
+- The extended real settings UI test passes: monitor start/stop, metered switch
+  persistence, all/clear/search/individual-day selection. Original day, monitor
+  and metered choices are restored while preserving the latest cache. General
+  DeviceChecks instrumentation also passes on the final APK.
+
+The first metering run observed a temporary unvalidated network; device checks
+now allow Android's capability updates to settle before asserting the state.
+AOSP's setMeteredWifiNetwork shell implementation returns -1 even on success;
+the tool narrowly handles that case and verifies settings by reading them back.
+An initially over-strict restoration comparison detected XML indentation rather
+than a changed sound setting; comparison now ignores XML tail whitespace while
+preserving actual values. Exact restoration was rechecked successfully.
+
+These tests use the existing Wi-Fi connection marked as metered; they do not
+claim paid cellular traffic or a physical Wi-Fi-to-LTE handover was exercised.
+Actual launcher placement/resizing, large accessibility fonts, Android 16,
+real-event/audible alert delivery and long-term battery/Doze remain separate
+checks. Prior alpha.2 reboot verification is not a new alpha.3 reboot test.
+
+## Local release build checkpoint – 21 November 2026
+
+assembleRelease and lintRelease pass with zero lint errors and seven warnings.
+The unsigned release APK has no debug flag, test instrumentation or QA classes.
+The distribution APK remains debug-signed. No artifact has been published.
+Production signing, a matching full GPL source package and a smoke test of the
+exact signed release artifact remain outstanding. Play submission requirements
+are separate. The 33 JVM tests were independently recompiled and passed again.

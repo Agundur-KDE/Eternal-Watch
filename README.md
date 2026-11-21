@@ -28,7 +28,7 @@ bash tools/build_apk.sh
 
 Output: `dist/Eternal-Watch-debug.apk`. Build artifacts, signing keys and local
 device test results are ignored by Git. The GitHub repository remains private.
-Version: 0.1.0-alpha.2; this is a development APK, not a store release.
+Version: 0.1.0-alpha.3; this is a development APK, not a store release.
 
 ## Monitoring and widget behavior
 
@@ -38,7 +38,8 @@ permission to continue checking while the app is closed. It uses a persistent
 notification and the chosen 15–300 second poll interval (default 30 seconds).
 Stop from the app or notification; that choice survives updates and restarts.
 If enabled, the boot receiver restores monitoring after the first device unlock.
-Actual reboot behavior for this new app still needs a device test.
+An actual reboot and restoration after unlock were verified on the Moto g54 5G
+with Android 15; other Android versions/manufacturers remain unverified.
 
 Battery saving/Doze and manufacturer restrictions can delay polls. No wake locks,
 exact alarms, full-screen alerts or Do Not Disturb bypasses are used. This is
@@ -50,6 +51,44 @@ advancing real-time clock. Refresh from its button; it also updates when the app
 or monitor fetches data. Without monitoring, Android requests occasional widget
 updates (nominal 30 minutes, subject to system scheduling). Actual launcher pinning
 and resizing remain a separate device check.
+
+## Data connections
+
+Game data uses **unmetered connections only by default**, including after an
+upgrade. Enable “Allow metered connections” in Alerts & settings to permit mobile
+data or metered Wi-Fi/hotspots. Android determines whether a connection is metered;
+the app cannot determine your actual tariff or cost.
+
+The same rule applies to the open app, background monitor, automatic widget
+updates and manual refresh buttons. Data Saver pauses metered requests even if
+Android exempts this app. Cached data remains visible with its source timestamp;
+the overview, monitoring notification and widget show why updates are paused.
+An enabled monitor resumes automatically on a permitted connection. With monitoring
+off, reconnecting does not introduce continuous background polling for widgets.
+Guide links open separately in the browser and follow its network settings.
+
+Requests are bound to the checked Android Network, so losing Wi-Fi cannot silently
+move an existing request to cellular. Policy is checked again before connecting,
+while reading and before accepting a response. A request already in flight when
+settings change may have transferred bytes before it can stop.
+
+The widget minimum height is now 240 dp so the pause reason and refresh button
+fit alongside the cached sample in all four languages at the tested font size.
+Actual launcher placement/resizing and large accessibility font sizes remain
+separate checks.
+
+Explicit USB device test (temporarily changes the connected Wi-Fi metering,
+Data Saver and app monitoring choices, then verifies their restoration):
+
+```sh
+python3 tools/check_network.py --serial <USB-SERIAL>
+```
+
+This uses Wi-Fi marked as metered; it does not require a paid mobile connection.
+Run with the matching debug APK installed, the phone authorized/unlocked,
+notification permission granted and monitoring stopped. Ignored private recovery
+state is kept under test-results if restoration cannot be verified. Run device
+checks sequentially.
 
 ## Data correctness
 
@@ -85,7 +124,7 @@ local app data. No game credentials or personal tokens are collected.
 
 ## Verification
 
-The production Java core is imported by 28 JVM tests. The original 14 were observed
+The production Java core is imported by 33 JVM tests. The original 14 were observed
 failing against unimplemented stubs and then passing after implementation. For the
 security changes, 11 regression tests were observed failing before the fixes and
 then passing; a further grammar regression was observed red during review and
@@ -117,7 +156,7 @@ No EL-Klock KDE template source or unverified third-party audio was copied.
 ## Languages
 
 German (de), English (en, full fallback), Spanish (es) and Russian (ru) are
-required project languages. All 71 translatable resources are complete, including
+required project languages. All 78 translatable resources are complete, including
 widget text, channels, notifications, status/errors and website links. Russian
 quantity forms include one/few/many/other; Spanish includes one/many/other.
 `tools/check_translations.py` runs before every APK build to reject missing keys,
@@ -133,9 +172,18 @@ the linked Agundur website opens in the browser and has its own language/content
 
 
 The interactive settings smoke test (`python3 tools/check_settings.py --serial
-<USB-SERIAL>`) temporarily exercises the monitor and day-selection controls. It
-accepts the app notification prompt and restores the saved day/monitor choices
+<USB-SERIAL>`) temporarily exercises the monitor, metered-connection and day-selection controls. It
+accepts the app notification prompt and restores the saved day/monitor/metered choices
 even on failure, using the matching local debug APK to restore the service.
 It does not replace the newer feed cache with an older snapshot. The phone must
 be authorized and unlocked. Restoration helper regressions can be run locally:
 `python3 -m unittest discover -s tools -p test_settings_restore.py`.
+
+An explicit debug-only notification posting check is available with monitoring
+stopped and notification permission granted:
+`adb -s <USB-SERIAL> shell am instrument -w de.agundur.eternalwatch/.NotificationChecks`.
+It posts clearly labeled synthetic messages through the production Special Day
+and quiet invasion notification methods, verifies Android's active notifications,
+and removes those test messages before finishing. It refuses to overwrite existing
+event notifications or run while monitoring is enabled. This checks posting,
+content and channels, not a real feed transition, audible delivery or heads-up UI.

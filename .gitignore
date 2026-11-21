@@ -13,3 +13,6 @@ local.properties
 *.pfx
 signing.properties
 __pycache__/
+# Internal security/release reviews stay local, outside public source packages.
+/docs/security-audit-*.md
+/docs/audits/
