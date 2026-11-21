@@ -49,7 +49,7 @@ def main():
             config[field]=str(path)
         if not re.fullmatch(r'[0-9a-fA-F]{64}',config['certificate_sha256']):raise RuntimeError('Expected certificate SHA-256 is required')
     paths=['app','gradle','gradlew','gradlew.bat','gradle.properties','build.gradle','settings.gradle',
-        'tools','LICENSE','NOTICE.md','README.md','docs/release.md','docs/verification.md']
+        'tools','LICENSE','NOTICE.md','README.md','docs/release.md','docs/verification.md','docs/development.md','docs/assets']
     source=run('git','archive','--format=tar',commit,'--',*paths,capture=True)
     sdk=Path(os.environ['ANDROID_HOME'])
     versions=sorted((p for p in (sdk/'build-tools').iterdir() if (p/'apksigner').exists()),key=lambda p:tuple(int(x) for x in re.findall(r'\d+',p.name)))
