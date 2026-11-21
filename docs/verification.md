@@ -348,3 +348,17 @@ commit, builds from an isolated extraction and stages complete artifact sets
 before exposing them. Production signing identity, exact signed-release device
 test and any account-side Play requirements are separate from these debug checks.
 No public distribution has been performed.
+
+## Release packaging regression check – 21 November 2026
+
+The full packaging regression tool now passes with a disposable test signing key:
+valid APK and AAB signatures, matching certificate and artifact hashes, exclusion
+of an ignored asset from both binary and source, unchanged existing artifact sets,
+and no final artifacts after a wrong-certificate failure. Test keys and signed
+test artifacts were removed. This is not a production signing/device test.
+
+The first real signing run exposed apksigner's sequential password-file reads
+when store and key password paths are the same. The packager now creates separate
+owner-only temporary copies outside build inputs and source packages. The retained
+regression uses the same password path for both fields and passes with the actual
+Android/JDK signing tools. Internal logs/results remain ignored by Git.
