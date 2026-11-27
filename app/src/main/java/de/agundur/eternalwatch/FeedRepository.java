@@ -12,7 +12,7 @@ import android.os.Looper;
 import de.agundur.eternalwatch.core.*;
 
 public final class FeedRepository {
-    public static final String ENDPOINT="https://mercator.holy-eternalland.de/botmanagement/elinfo.json";
+    public static final String ENDPOINT="https://eternal-lands.agundur.de/_resources/eternal-watch-feed.php";
     private static Context application;
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private static final RequestCoordinator REQUESTS=new RequestCoordinator(8000,android.os.SystemClock::elapsedRealtime,
