@@ -62,6 +62,7 @@
     <string name="about">Acerca de la aplicación y licencias</string>
     <string name="about_text">Un compañero no oficial para Eternal Lands de Agundur. Datos públicos de Mercator. Sin cuenta, token personal, publicidad ni seguimiento. Reglas del reloj y los avisos adaptadas de EL-Klock, GPL-3.0-only. Los datos del juego pertenecen a sus respectivos autores. Versión %1$s.</string>
     <string name="view_license">Ver licencia del código fuente</string>
+    <string name="privacy_policy">Política de privacidad</string>
     <string name="close">Cerrar</string>
     <string name="restart_help">Si está activada, la supervisión se reanuda tras un reinicio cuando desbloqueas el teléfono. Detenerla también desactiva el inicio automático.</string>
     <string name="clock_accessibility">Hora de Eternal Lands: %1$s</string>

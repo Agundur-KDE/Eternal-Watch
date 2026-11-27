@@ -215,7 +215,10 @@ public final class MainActivity extends Activity {
         try { version=getPackageManager().getPackageInfo(getPackageName(),0).versionName; }
         catch(android.content.pm.PackageManager.NameNotFoundException e) { throw new IllegalStateException(e); }
         new AlertDialog.Builder(this).setTitle(R.string.app_name).setMessage(getString(R.string.about_text,version))
-            .setPositiveButton(R.string.close,null).setNeutralButton(R.string.view_license,(d,w)->{
+            .setPositiveButton(R.string.close,null)
+            .setNegativeButton(R.string.privacy_policy,(d,w)->openUrl(getString(R.string.privacy_policy_url)
+                +(getResources().getConfiguration().getLocales().get(0).getLanguage().equals("de")?"#eternal-watch":"#eternal-watch-english")))
+            .setNeutralButton(R.string.view_license,(d,w)->{
                 try(java.io.InputStream in=getAssets().open("LICENSE.txt")) {
                     java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);
                     new AlertDialog.Builder(this).setTitle(R.string.view_license).setMessage(out.toString("UTF-8")).setPositiveButton(R.string.close,null).show();

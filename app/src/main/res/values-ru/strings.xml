@@ -63,6 +63,7 @@
     <string name="about">О приложении и лицензиях</string>
     <string name="about_text">Неофициальный помощник для Eternal Lands от Agundur. Общедоступные данные Mercator. Без учётной записи, личного токена, рекламы и отслеживания. Правила часов и оповещений адаптированы из EL-Klock, GPL-3.0-only. Игровые данные принадлежат соответствующим авторам. Версия %1$s.</string>
     <string name="view_license">Лицензия исходного кода</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
     <string name="close">Закрыть</string>
     <string name="restart_help">Если отслеживание включено, оно возобновляется после перезагрузки и разблокировки телефона. Его остановка также отключает автоматический запуск.</string>
     <string name="clock_accessibility">Время Eternal Lands: %1$s</string>

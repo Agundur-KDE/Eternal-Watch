@@ -58,6 +58,7 @@
     <string name="about">Über diese App &amp; Lizenzen</string>
     <string name="about_text">Ein inoffizieller Eternal-Lands-Begleiter von Agundur. Öffentliche Daten von Mercator. Ohne Konto, persönlichen Token, Werbung oder Tracking. Uhr- und Alarmregeln aus EL-Klock übernommen, GPL-3.0-only. Spieldaten stammen von ihren jeweiligen Urhebern. Version %1$s.</string>
     <string name="view_license">Quellcodelizenz ansehen</string>
+    <string name="privacy_policy">Datenschutzerklärung</string>
     <string name="close">Schließen</string>
     <string name="restart_help">Aktive Überwachung startet nach einem Neustart wieder, sobald das Handy entsperrt wurde. Stoppen deaktiviert auch den automatischen Start.</string>
     <string name="clock_accessibility">Eternal-Lands-Zeit: %1$s</string>

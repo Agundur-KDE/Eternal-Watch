@@ -16,7 +16,8 @@ bash tools/build_apk.sh
 Output: `dist/Eternal-Watch-debug.apk`. Build artifacts, signing keys and local
 device test results are ignored by Git. Public source and signed alpha releases
 are available from this GitHub repository.
-Version: 0.1.0-alpha.4; an early test version, not a Google Play release.
+Version: 0.1.0-alpha.5; an early test version being prepared for Google Play.
+The About dialog links to the published app-specific privacy section on Agundur.de.
 Download the signed APK from [Releases](https://github.com/Agundur-KDE/Eternal-Watch/releases).
 The local build command above produces a debug APK.
 
