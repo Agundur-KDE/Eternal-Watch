@@ -2,6 +2,14 @@
 
 Parent instructions in `/home/alec/projects/AGENTS.md` apply.
 
+- Dependency verification is strict via `gradle/verification-metadata.xml`.
+  Before adding a dependency, verify its exact coordinates against the original
+  project's documentation; an AI suggestion or registry entry alone is insufficient.
+  Review transitive dependencies and build plugins too. Never approve generated
+  cache checksums blindly: compare new artifacts against the official upstream
+  repository before changing the trusted metadata. Do not disable verification
+  or use lenient mode to bypass a failure.
+
 - Android app for Eternal Lands; working directory is this repository.
 - The user authorized making this repository public and publishing alpha.4 on
   21 November 2026. Further releases or visibility changes require user instruction.

@@ -213,3 +213,20 @@ after injecting a tap tests a timing race rather than ordinary saved settings.
 If a screen-timeout extension is needed, record its original value before the
 change and restore/read it back at the end, including after interrupted checks.
 Keep device backups, screenshots and per-device results in ignored test-results.
+## Dependency integrity
+
+Gradle verifies dependency artifacts and metadata against the SHA-256 values in
+`gradle/verification-metadata.xml`. Unknown or changed artifacts fail verification.
+This includes build plugins and test libraries, even though the app has no added
+third-party runtime library dependencies.
+
+On 27 November 2026 all 487 recorded artifacts were compared byte-for-byte by
+SHA-256 with fresh HTTPS downloads from Google Maven or Maven Central. Each entry
+records its source URL. A repository match is evidence of origin and integrity,
+not proof that a dependency is free of vulnerabilities or malicious behavior.
+
+Before introducing a dependency, establish its exact package coordinates from
+the original project's documentation and review its maintainer and transitive
+dependencies. Review updates before changing trusted checksums. Never resolve a
+verification failure by automatically trusting the local cache or disabling
+verification. The Gradle distribution also has a pinned SHA-256 checksum.
