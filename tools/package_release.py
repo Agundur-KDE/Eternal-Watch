@@ -27,27 +27,45 @@ def ignored_if_local(path):
     if path.is_relative_to(ROOT) and not run('git','check-ignore',str(path),capture=True).strip():
         raise RuntimeError('Signing material must be excluded from Git')
 
+def load_signing_config(path):
+    config_path=path.resolve();ignored_if_local(config_path)
+    if config_path.stat().st_mode & 0o077:raise RuntimeError('Signing config must be owner-only (chmod 600)')
+    config=json.loads(config_path.read_text())
+    for field in ('keystore','store_password_file','key_password_file'):
+        path=Path(config[field]).expanduser().resolve();ignored_if_local(path)
+        if not path.is_file() or path.stat().st_mode & 0o077:raise RuntimeError('Signing material must exist with owner-only permissions')
+        config[field]=str(path)
+    if not re.fullmatch(r'[0-9a-fA-F]{64}',config['certificate_sha256']):raise RuntimeError('Expected certificate SHA-256 is required')
+    return config
+
+def stage_signing_config(config,scratch,label):
+    staged=dict(config)
+    for field in ('store_password_file','key_password_file'):
+        password=scratch/(label+'-'+field+'.txt')
+        password.touch(mode=0o600)
+        shutil.copyfile(config[field],password)
+        staged[field]=str(password)
+    return staged
+
 def main():
     parser=argparse.ArgumentParser()
     mode=parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--unsigned',action='store_true')
     mode.add_argument('--signing-config',type=Path)
     parser.add_argument('--bundle',action='store_true')
+    parser.add_argument('--bundle-signing-config',type=Path,
+        help='Optional separate upload-key config for the AAB; APK remains signed with --signing-config')
     parser.add_argument('--output-dir',type=Path,default=ROOT/'dist')
     args=parser.parse_args()
     if run('git','status','--porcelain','--untracked-files=normal',capture=True).strip():
         raise RuntimeError('Commit the complete source first; release packages require a clean working tree')
     commit=run('git','rev-parse','HEAD',capture=True).decode().strip()
-    config=None
-    if args.signing_config:
-        config_path=args.signing_config.resolve();ignored_if_local(config_path)
-        if config_path.stat().st_mode & 0o077:raise RuntimeError('Signing config must be owner-only (chmod 600)')
-        config=json.loads(config_path.read_text())
-        for field in ('keystore','store_password_file','key_password_file'):
-            path=Path(config[field]).expanduser().resolve();ignored_if_local(path)
-            if not path.is_file() or path.stat().st_mode & 0o077:raise RuntimeError('Signing material must exist with owner-only permissions')
-            config[field]=str(path)
-        if not re.fullmatch(r'[0-9a-fA-F]{64}',config['certificate_sha256']):raise RuntimeError('Expected certificate SHA-256 is required')
+    if args.bundle_signing_config and not args.bundle:
+        raise RuntimeError('--bundle-signing-config requires --bundle')
+    if args.bundle_signing_config and not args.signing_config:
+        raise RuntimeError('--bundle-signing-config also requires --signing-config for the APK')
+    config=load_signing_config(args.signing_config) if args.signing_config else None
+    bundle_config=load_signing_config(args.bundle_signing_config) if args.bundle_signing_config else config
     paths=['app','gradle','gradlew','gradlew.bat','gradle.properties','build.gradle','settings.gradle',
         'tools','LICENSE','NOTICE.md','README.md','docs/release.md','docs/verification.md','docs/development.md','docs/assets']
     source=run('git','archive','--format=tar',commit,'--',*paths,capture=True)
@@ -61,15 +79,12 @@ def main():
         scratch=Path(temporary);work=scratch/'source';work.mkdir()
         output=scratch/'artifacts';output.mkdir(mode=0o700)
         if config:
-            config=dict(config)
             # apksigner caches file readers and consumes consecutive lines when a
             # path is reused. Independent private copies also support PKCS12's
             # usual shared store/key password without exposing it in arguments.
-            for field in ('store_password_file','key_password_file'):
-                password=scratch/(field+'.txt')
-                password.touch(mode=0o600)
-                shutil.copyfile(config[field],password)
-                config[field]=str(password)
+            config=stage_signing_config(config,scratch,'apk')
+            bundle_config=(stage_signing_config(bundle_config,scratch,'aab')
+                if args.bundle_signing_config else config)
         with tarfile.open(fileobj=io.BytesIO(source)) as archive:
             for member in archive.getmembers():
                 path=Path(member.name)
@@ -108,20 +123,21 @@ def main():
             if 'CN=Android Debug' in verification:raise RuntimeError('Android debug key forbidden for release')
             certificate=match.group(1)
         else:shutil.copyfile(unsigned,apk)
-        artifacts=[apk]
+        artifacts=[apk];bundle_certificate=None
         if args.bundle:
             bundle=output/(base+suffix+'.aab');raw=work/'app/build/outputs/bundle/release/app-release.aab'
             if config:
                 jdk=Path(os.environ['JAVA_HOME'])
-                run(str(jdk/'bin/jarsigner'),'-keystore',config['keystore'],'-storepass:file',config['store_password_file'],
-                    '-keypass:file',config['key_password_file'],'-signedjar',str(bundle),str(raw),config['alias'])
+                bundle_certificate=bundle_config['certificate_sha256']
+                run(str(jdk/'bin/jarsigner'),'-keystore',bundle_config['keystore'],'-storepass:file',bundle_config['store_password_file'],
+                    '-keypass:file',bundle_config['key_password_file'],'-signedjar',str(bundle),str(raw),bundle_config['alias'])
                 verification=run(str(jdk/'bin/jarsigner'),'-J-Duser.language=en','-verify','-strict','-verbose',
-                    '-keystore',config['keystore'],'-storepass:file',config['store_password_file'],str(bundle),config['alias'],capture=True).decode()
+                    '-keystore',bundle_config['keystore'],'-storepass:file',bundle_config['store_password_file'],str(bundle),bundle_config['alias'],capture=True).decode()
                 if 'jar verified.' not in verification:raise RuntimeError('AAB is not fully verified')
                 pem=run(str(jdk/'bin/keytool'),'-printcert','-jarfile',str(bundle),'-rfc',capture=True).decode()
                 certificate_match=re.search(r'-----BEGIN CERTIFICATE-----\s*(.*?)\s*-----END CERTIFICATE-----',pem,re.S)
-                if not certificate_match or hashlib.sha256(base64.b64decode(certificate_match.group(1))).hexdigest()!=certificate:
-                    raise RuntimeError('AAB signer differs from expected APK certificate')
+                if not certificate_match or hashlib.sha256(base64.b64decode(certificate_match.group(1))).hexdigest()!=bundle_certificate.lower():
+                    raise RuntimeError('AAB signer differs from expected upload certificate')
             else:shutil.copyfile(raw,bundle)
             artifacts.append(bundle)
         source_path=output/(base+'-source.tar.gz')
@@ -131,7 +147,8 @@ def main():
         if run('git','rev-parse','HEAD',capture=True).decode().strip()!=commit or run('git','status','--porcelain','--untracked-files=normal',capture=True).strip():
             raise RuntimeError('Source changed during build; no artifacts released')
         manifest={'version':version,'version_code':metadata['versionCode'],'source_commit':commit,'isolated_build':True,
-            'signed':config is not None,'certificate_sha256':certificate,'artifacts':{p.name:sha256(p) for p in artifacts}}
+            'signed':config is not None,'certificate_sha256':certificate,'bundle_certificate_sha256':bundle_certificate,
+            'artifacts':{p.name:sha256(p) for p in artifacts}}
         (output/(base+suffix+'-manifest.json')).write_text(json.dumps(manifest,indent=2)+'\n')
         # Same-filesystem directory rename exposes the complete verified set at once.
         os.rename(output,final)
